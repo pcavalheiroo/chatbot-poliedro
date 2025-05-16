@@ -5,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        diodrum: ["Diodrum-Semibold"],
+        diodrum: ["Diodrum-Semibold", "sans-serif"],
       },
     },
   },
