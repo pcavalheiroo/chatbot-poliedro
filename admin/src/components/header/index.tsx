@@ -17,7 +17,7 @@ export function Header() {
           className="w-32 h-10"
           resizeMode="contain"
         />
-        <Text className="text-xl font-bold text-black mt-5">
+        <Text className="text-xl font-bold text-black mt-5 mb-2" style = {{fontSize: 20}}>
           Admin
         </Text>
       </View>
