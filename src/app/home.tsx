@@ -1,7 +1,6 @@
 import { View, Text, ScrollView, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-
+import BackButton from "../components/BackButton";
 import Header from "../components/Header";
 import HomeOption from "../components/HomeOption";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
@@ -14,6 +13,8 @@ export default function Index() {
     <View style={{ flex: 1 }} className="bg-[#f7f7f7] px-12 relative">
 
       <BackgroundPoliedros />
+
+      <BackButton onPress={() => router.replace("/")} />
 
       <Header />
 
