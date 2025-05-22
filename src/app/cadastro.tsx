@@ -15,7 +15,7 @@ export default function Cadastro() {
 
     const handleCadastro = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://10.2.2.239:5000/usuarios/cadastro", {
+            const response = await axios.post("http://192.168.1.101:5000/usuarios/cadastro", {
                 email,
                 senha
             });
