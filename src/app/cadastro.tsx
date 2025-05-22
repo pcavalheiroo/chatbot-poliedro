@@ -1,27 +1,32 @@
-// app/cadastro.tsx
 import { View, Text, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AuthForm from "../components/AuthForm";
 import tw from "twrnc";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
+import BackButton from "../components/BackButton";
 
 export default function Cadastro() {
     const router = useRouter();
 
     const handleGoBack = () => {
-        router.replace("/"); // Vai para a tela de login
+        router.replace("/");
     };
 
     const handleCadastro = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            await axios.post("http://192.168.1.107:5000/usuarios/cadastro", { email, senha });
-            alert("Cadastro realizado com sucesso!");
-            router.replace("/");
-        } catch (err) {
-            console.log(err);
-            alert("Erro ao cadastrar. Tente novamente.");
+            const response = await axios.post("http://10.2.2.239:5000/usuarios/cadastro", {
+                email,
+                senha
+            });
+
+            if (response.status === 201) {
+                alert("Cadastro realizado com sucesso!");
+                router.replace("/");
+            }
+        } catch (err: any) {
+            console.error("Erro no cadastro:", err.response?.data || err.message);
+            alert(err.response?.data?.message || "Erro ao cadastrar. Tente novamente.");
         }
     };
 
@@ -34,17 +39,16 @@ export default function Cadastro() {
             <ScrollView
                 contentContainerStyle={tw`flex-grow`}
                 keyboardShouldPersistTaps="handled"
+                style={tw`overflow-visible`}
             >
                 <View style={tw`flex-1 bg-[#f7f7f7] relative`}>
                     <BackgroundPoliedros />
 
-                    {/* Botão de voltar */}
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        style={tw`absolute top-12 left-6 z-10`}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#2a52be" />
-                    </TouchableOpacity>
+                    <BackButton
+                        onPress={handleGoBack}
+                        color="#2a52be"
+                        style={tw`top-12`}
+                    />
 
                     <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
                         {/* Logo e cabeçalho */}
@@ -54,7 +58,9 @@ export default function Cadastro() {
                                 style={tw`w-48 h-48 rounded-full border-4 border-white shadow-lg`}
                                 resizeMode="contain"
                             />
-                            <Text style={tw`text-3xl font-bold mt-9`}>Crie sua conta</Text>
+                            <Text style={tw`text-3xl font-bold mt-9`}>
+                                Crie sua conta
+                            </Text>
                             <Text style={tw`text-lg text-center mt-3 mb-4`}>
                                 Cadastre-se para acessar o restaurante
                             </Text>
@@ -66,14 +72,22 @@ export default function Cadastro() {
                                 isCadastro={true}
                                 onSubmit={handleCadastro}
                                 buttonText="Cadastrar"
+                                emailLabel="Email"
+                                senhaLabel="Senha"
+                                confirmarSenhaLabel="Confirmar Senha"
                             />
                         </View>
 
                         {/* Link rápido para login */}
                         <View style={tw`flex-row mt-4 mb-8`}>
                             <Text style={tw`text-gray-600`}>Já tem uma conta?</Text>
-                            <TouchableOpacity onPress={() => router.replace("/")}>
-                                <Text style={tw`text-[#2a52be] font-bold ml-2`}>Faça login</Text>
+                            <TouchableOpacity
+                                onPress={() => router.replace("/")}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={tw`text-[#2a52be] font-bold ml-2`}>
+                                    Faça login
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>

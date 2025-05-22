@@ -3,10 +3,13 @@ import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity } from "react-native";
 import tw from "twrnc";
 
-interface AuthFormProps {
-    onSubmit: (data: { email: string; senha: string }) => void;
-    buttonText: string;
+export interface AuthFormProps {
     isCadastro?: boolean;
+    onSubmit: (credentials: { email: string; senha: string }) => void;
+    buttonText: string;
+    emailLabel?: string;       // Adicione estas linhas
+    senhaLabel?: string;       // como propriedades opcionais
+    confirmarSenhaLabel?: string;
 }
 
 export default function AuthForm({

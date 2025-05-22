@@ -9,23 +9,33 @@ interface BackButtonProps {
   style?: any;
 }
 
-export default function BackButton({ onPress, color = "#000000", style }: BackButtonProps) {
+// components/BackButton.tsx
+export default function BackButton({ 
+  onPress, 
+  color = "#2a52be", 
+  style 
+}: BackButtonProps) {
   const router = useRouter();
   
   const handlePress = () => {
     if (onPress) {
       onPress();
     } else {
-      router.back();
+      // Padrão seguro: volta se possível, senão vai para raiz
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/");
+      }
     }
   };
 
   return (
     <TouchableOpacity 
       onPress={handlePress}
-      style={[tw`absolute top-13 left-6 z-10`, style]}
+      style={[tw`absolute top-12 left-6 z-50`, style]}
     >
-      <Ionicons name="arrow-back" size={28} color={color} />
+      <Ionicons name="arrow-back" size={24} color={color} />
     </TouchableOpacity>
   );
 }

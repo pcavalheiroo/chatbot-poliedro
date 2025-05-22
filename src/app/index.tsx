@@ -1,4 +1,3 @@
-// app/index.tsx (Login)
 import { View, Text, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -12,7 +11,7 @@ export default function Login() {
 
     const handleLogin = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://192.168.1.107:5000/usuarios/login", { email, senha });
+            const response = await axios.post("http://10.2.2.239:5000/usuarios/login", { email, senha });
             console.log("Usuário logado:", response.data);
             router.replace("/home");
         } catch (err) {

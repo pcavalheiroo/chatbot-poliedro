@@ -2,7 +2,6 @@ import { View, Text, ScrollView, Image } from "react-native";
 import { useRouter } from "expo-router";
 import BackButton from "../components/BackButton";
 import Header from "../components/Header";
-import HomeOption from "../components/HomeOption";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
 import HomeOptionsGrid from "../components/HomeOptionsGrid";
 
