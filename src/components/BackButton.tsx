@@ -33,7 +33,7 @@ export default function BackButton({
   return (
     <TouchableOpacity 
       onPress={handlePress}
-      style={[tw`absolute top-12 left-6 z-50`, style]}
+      style={[tw`absolute top-14 left-6 z-50`, style]}
     >
       <Ionicons name="arrow-back" size={24} color={color} />
     </TouchableOpacity>
