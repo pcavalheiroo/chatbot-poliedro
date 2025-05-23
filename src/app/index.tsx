@@ -4,6 +4,7 @@ import axios from "axios";
 import AuthForm from "../components/AuthForm";
 import tw from "twrnc";
 
+import AnimatedView from "../components/AnimatedView";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
 
 export default function Login() {
@@ -11,7 +12,7 @@ export default function Login() {
 
     const handleLogin = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://192.168.1.101:5000/usuarios/login", { email, senha }); // ipconfig no cmd
+            const response = await axios.post("http://10.2.1.102:5000/usuarios/login", { email, senha }); // ipconfig no cmd (10.2.1.102) (192.168.1.101)
             console.log("Usuário logado:", response.data);
             router.replace("/home");
         } catch (err) {

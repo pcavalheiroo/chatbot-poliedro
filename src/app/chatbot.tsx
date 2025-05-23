@@ -51,7 +51,7 @@ export default function Chatbot() {
         setIsLoading(true);
 
         try {
-            const res = await axios.post("http://192.168.1.101:5000/chat", {
+            const res = await axios.post("http://10.2.1.102:5000/chat", {
                 usuario_id: "usuario_teste",
                 mensagem: input
             }, {
