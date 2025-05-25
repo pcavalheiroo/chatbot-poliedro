@@ -8,13 +8,13 @@ import {
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
-    ActivityIndicator,
-    ScrollView
+    ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import tw from "twrnc";
-import BackButton from "../components/BackButton"; // Importe o componente BackButton
+import BackButton from "../components/BackButton";
+import { useUser } from "../contexts/UserContext";
 
 interface Message {
     id: string;
@@ -23,7 +23,12 @@ interface Message {
     timestamp: Date;
 }
 
-export default function Chatbot() {
+interface ChatbotProps {
+    // Adicione props aqui quando necessário
+}
+
+export default function Chatbot({ }: ChatbotProps) {
+    const { user } = useUser();
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -36,8 +41,47 @@ export default function Chatbot() {
     const [isLoading, setIsLoading] = useState(false);
     const flatListRef = useRef<FlatList<Message>>(null);
 
+    // Carregar histórico ao iniciar
+    useEffect(() => {
+        const loadHistory = async () => {
+            if (user?.id) {
+                try {
+                    const response = await axios.get(
+                        `http://192.168.1.101:5000/chat/historico?usuario_id=${user.id}`
+                    );
+
+                    // Mantém a ordem original (já vem ordenada do banco)
+                    const historico = response.data.map((msg: any) => ({
+                        id: msg._id,
+                        text: msg.mensagem,
+                        sender: msg.origem === "usuario" ? "user" : "bot",
+                        timestamp: new Date(msg.data)
+                    }));
+
+                    // Adiciona no final do array mantendo a ordem cronológica
+                    setMessages(prev => [
+                        ...prev.filter(m => m.id === "1"),  // Mantém a mensagem inicial
+                        ...historico
+                    ]);
+
+                } catch (error) {
+                    console.error("Erro ao carregar histórico:", error);
+                }
+            }
+        };
+        loadHistory();
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }
+    }, [messages]);
+
     const sendMessage = async () => {
-        if (input.trim() === "" || isLoading) return;
+        if (input.trim() === "" || isLoading || !user) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -46,37 +90,53 @@ export default function Chatbot() {
             timestamp: new Date()
         };
 
-        setMessages((prev) => [...prev, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
         setInput("");
         setIsLoading(true);
 
         try {
-            const res = await axios.post("http://10.2.1.102:5000/chat", {
-                usuario_id: "usuario_teste",
+            const res = await axios.post<{ resposta: string }>("http://192.168.1.101:5000/chat", {
+                usuario_id: user.id,
                 mensagem: input
             }, {
                 timeout: 10000
             });
 
+            let resposta = res.data.resposta;
+
+            // Formatação condicional com tipagem explícita
+            if (resposta.includes("- R$")) {
+                resposta = "📋 Cardápio disponível:\n\n" + resposta.split("\n")
+                    .map((item: string) => `• ${item.trim()}`)
+                    .filter((item: string) => item !== "•")
+                    .join("\n");
+            } else if (resposta.includes("Pedido registrado")) {
+                resposta = "✅ " + resposta;
+            } else if (resposta.includes("não encontrado")) {
+                resposta = "❌ " + resposta;
+            }
+
             const botMessage: Message = {
                 id: Date.now().toString() + "_bot",
-                text: res.data.resposta,
+                text: resposta,
                 sender: "bot",
                 timestamp: new Date()
             };
 
             setMessages((prev) => [...prev, botMessage]);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Erro na comunicação com o bot:", error);
 
-            let errorMessage = "Erro ao conectar com o bot";
+            let errorMessage = "Erro ao conectar com o serviço";
             if (axios.isAxiosError(error)) {
                 errorMessage = error.response?.data?.erro || error.message;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
             }
 
             const errMsg: Message = {
                 id: Date.now().toString() + "_err",
-                text: errorMessage,
+                text: `⚠️ ${errorMessage}`,
                 sender: "bot",
                 timestamp: new Date()
             };
@@ -86,10 +146,6 @@ export default function Chatbot() {
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-    }, [messages]);
 
     const renderItem = ({ item }: { item: Message }) => (
         <View
@@ -122,34 +178,32 @@ export default function Chatbot() {
             keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
         >
             <View style={tw`flex-1`}>
-                {/* Header */}
                 <View style={tw`bg-[#005B7F] p-5 pt-14 pb-4`}>
-                    {/* Adicione o BackButton aqui */}
                     <BackButton color="#fff" />
                     <Text style={tw`text-white text-xl font-bold text-center`}>
                         Assistente da Cantina
                     </Text>
                 </View>
 
-                {/* Mensagens + Input */}
                 <View style={tw`flex-1`}>
-                    <FlatList
+                    <FlatList<Message>
                         ref={flatListRef}
                         data={messages}
                         keyExtractor={(item) => item.id}
                         renderItem={renderItem}
                         contentContainerStyle={tw`pb-28 pt-4`}
                         showsVerticalScrollIndicator={false}
-                        ListFooterComponent={
-                            isLoading ? (
-                                <View style={tw`items-center my-2`}>
-                                    <ActivityIndicator size="small" color="#005B7F" />
-                                </View>
-                            ) : null
-                        }
                     />
 
-                    {/* Input fixado abaixo */}
+                    {isLoading && (
+                        <View style={tw`bg-gray-100 rounded-bl-none border border-gray-200 self-start p-3 mx-4 my-2 max-w-3/4`}>
+                            <View style={tw`flex-row items-center`}>
+                                <ActivityIndicator size="small" color="#005B7F" style={tw`mr-2`} />
+                                <Text style={tw`text-gray-500 italic`}>Digitando...</Text>
+                            </View>
+                        </View>
+                    )}
+
                     <View style={tw`absolute bottom-0 left-0 right-0 bg-white px-3 pt-3 pb-9 border-t border-gray-200`}>
                         <View style={tw`flex-row items-center bg-gray-100 rounded-full px-6`}>
                             <TextInput
