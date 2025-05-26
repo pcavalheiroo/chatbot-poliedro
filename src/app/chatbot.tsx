@@ -16,6 +16,7 @@ import axios from "axios";
 import tw from "twrnc";
 import BackButton from "../components/BackButton";
 import { useUser } from "../contexts/UserContext";
+import AppHeader from "../components/AppHeader";
 
 interface Message {
     id: string;
@@ -54,7 +55,7 @@ export default function Chatbot() {
         setIsLoading(true);
 
         try {
-            const res = await axios.post("http://192.168.1.101:5000/chat", {
+            const res = await axios.post("http://10.2.0.202:5000/chat", { // 10.2.0.202 | 192.168.1.101
                 usuario_id: user.id,
                 mensagem: input
             });
@@ -99,7 +100,7 @@ export default function Chatbot() {
                     onPress: async () => {
                         try {
                             await axios.delete(
-                                `http://192.168.1.101:5000/chat/limpar_historico?usuario_id=${user.id}`
+                                `http://10.2.0.202:5000/chat/limpar_historico?usuario_id=${user.id}`
                             );
 
                             // Mantém apenas a mensagem inicial
@@ -196,7 +197,7 @@ export default function Chatbot() {
             if (user?.id) {
                 try {
                     const response = await axios.get(
-                        `http://192.168.1.101:5000/chat/historico?usuario_id=${user.id}`
+                        `http://10.2.0.202:5000/chat/historico?usuario_id=${user.id}`
                     );
 
                     // Mantém a ordem original (já vem ordenado do backend)
@@ -230,21 +231,16 @@ export default function Chatbot() {
         >
             <View style={tw`flex-1`}>
                 {/* Header */}
-                <View style={tw`bg-[#005B7F] p-5 pt-14 pb-4`}>
-                    <BackButton color="#fff" />
-                    <Text style={tw`text-white text-xl font-bold text-center`}>
-                        Assistente da Cantina
-                    </Text>
+                <AppHeader title="Assistente da Cantina">
+                    {/* Adicionamos o botão de limpar histórico como children */}
                     <TouchableOpacity
                         onPress={limparHistorico}
-                        style={[
-                            tw`absolute top-12 right-5 p-2.5 rounded-full`,
-                            styles.botaoLimpar
-                        ]}
+                        // Posicionamento absoluto dentro do AppHeader
+                        style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-transparent`}
                     >
-                        <Ionicons name="trash-outline" size={20} color="white" />
+                        <Ionicons name="trash-outline" size={25} color="white" />
                     </TouchableOpacity>
-                </View>
+                </AppHeader>
 
                 {/* Mensagens */}
                 <View style={tw`flex-1`}>

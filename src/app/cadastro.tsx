@@ -15,7 +15,7 @@ export default function Cadastro() {
 
     const handleCadastro = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://192.168.1.101:5000/usuarios/cadastro", {
+            const response = await axios.post("http://10.2.0.202:5000/usuarios/cadastro", { // Verifique o IP
                 email,
                 senha
             });
@@ -25,8 +25,27 @@ export default function Cadastro() {
                 router.replace("/");
             }
         } catch (err: any) {
-            console.error("Erro no cadastro:", err.response?.data || err.message);
-            alert(err.response?.data?.message || "Erro ao cadastrar. Tente novamente.");
+            let errorMessage = "Erro desconhecido ao cadastrar.";
+            console.error("Erro completo no cadastro:", err); // Log o erro completo para depuração
+
+            if (axios.isAxiosError(err)) {
+                if (err.response) {
+                    // O servidor respondeu com um status de erro (4xx, 5xx)
+                    console.error("Dados do erro do servidor:", err.response.data);
+                    console.error("Status do erro do servidor:", err.response.status);
+                    errorMessage = err.response.data.erro || err.response.data.message || `Erro do servidor: ${err.response.status}`;
+                } else if (err.request) {
+                    // A requisição foi feita, mas não houve resposta (ex: servidor offline)
+                    errorMessage = "Não foi possível conectar ao servidor. Verifique se o backend está rodando e o IP está correto.";
+                } else {
+                    // Algo aconteceu na configuração da requisição que disparou um erro
+                    errorMessage = `Erro na configuração da requisição: ${err.message}`;
+                }
+            } else if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+
+            alert(errorMessage);
         }
     };
 

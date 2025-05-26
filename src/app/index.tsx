@@ -15,7 +15,7 @@ export default function Login() {
 
     const handleLogin = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://192.168.1.101:5000/usuarios/login", {
+            const response = await axios.post("http://10.2.0.202:5000/usuarios/login", {
                 email,
                 senha
             }, {
