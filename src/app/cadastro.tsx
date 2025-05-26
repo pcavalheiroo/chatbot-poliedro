@@ -15,7 +15,7 @@ export default function Cadastro() {
 
     const handleCadastro = async ({ email, senha }: { email: string; senha: string }) => {
         try {
-            const response = await axios.post("http://10.2.0.202:5000/usuarios/cadastro", { // Verifique o IP
+            const response = await axios.post("http://192.168.1.113:5000/usuarios/cadastro", { // Verifique o IP
                 email,
                 senha
             });
