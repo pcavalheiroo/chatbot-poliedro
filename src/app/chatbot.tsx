@@ -19,7 +19,7 @@ import { useUser } from "../contexts/UserContext";
 
 // Definição da URL base da API
 // Certifique-se de que este IP é o IP da sua máquina onde o backend está rodando
-const API_BASE_URL = "http://192.168.1.113:5000"; 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL; 
 
 interface Message {
     id: string;

@@ -23,7 +23,7 @@ interface CategorizedMenu {
 
 // URL base da sua API Flask
 // Lembre-se de ajustar este IP para o IP da sua máquina onde o backend está rodando
-const API_BASE_URL = "http://192.168.1.113:5000"; 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL; 
 
 export default function Cardapio() {
     const [cardapio, setCardapio] = useState<CategorizedMenu>({});
