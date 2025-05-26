@@ -18,26 +18,39 @@ export default function Login() {
             const response = await axios.post("http://192.168.1.101:5000/usuarios/login", {
                 email,
                 senha
+            }, {
+                timeout: 5000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
-            // Agora o backend retorna o usuário completo diretamente
-            const usuario = response.data;
-
-            setUser({
-                id: usuario._id,
-                email: usuario.email
-            });
-
-            router.replace("/home");
-        } catch (err) {
-            console.error("Erro no login:", err);
-
+            if (response.data._id) {
+                setUser({
+                    id: response.data._id,
+                    email: response.data.email
+                });
+                router.replace("/home");
+            } else {
+                throw new Error("Resposta inválida do servidor");
+            }
+        } catch (error) {
             let errorMessage = "Falha ao fazer login";
-            if (axios.isAxiosError(err)) {
-                errorMessage = err.response?.data?.erro || err.message;
+
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    // Erro com resposta do servidor
+                    errorMessage = error.response.data.erro || error.response.statusText;
+                } else if (error.request) {
+                    // Erro sem resposta do servidor
+                    errorMessage = "Servidor não respondeu";
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
             }
 
             alert(errorMessage);
+            console.error("Erro no login:", error);
         }
     };
 
