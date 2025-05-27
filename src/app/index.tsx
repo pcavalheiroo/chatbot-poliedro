@@ -1,10 +1,13 @@
+// app/login.tsx
 import React, { useCallback } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     View,
-    Alert
+    Alert,
+    Text, // Adicionei Text aqui para a mensagem "ou"
+    TouchableOpacity // Adicionei TouchableOpacity para o novo botão
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -12,8 +15,8 @@ import tw from "twrnc";
 
 import AuthForm from "../components/AuthForm";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
-import AuthHeader from "../components/AuthHeader"; // Novo componente
-import AuthLink from "../components/AuthLink";     // Novo componente
+import AuthHeader from "../components/AuthHeader";
+import AuthLink from "../components/AuthLink";
 import { useUser } from "../contexts/UserContext";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -52,7 +55,12 @@ export default function Login() {
     }, [setUser, router]);
 
     const handleGoToCadastro = useCallback(() => {
-        router.push("/cadastro"); // Permite swipe back
+        router.push("/cadastro");
+    }, [router]);
+
+    // NOVA FUNÇÃO: Navegar para a tela de login do administrador
+    const handleGoToAdminLogin = useCallback(() => {
+        router.push("/admin/login"); // Esta rota ainda não existe, criaremos
     }, [router]);
 
     return (
@@ -69,7 +77,7 @@ export default function Login() {
                     <BackgroundPoliedros />
 
                     <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-                        <AuthHeader // Componente reutilizado
+                        <AuthHeader
                             title="Bem-vindo ao PoliChat"
                             subtitle="Faça login para acessar o restaurante"
                         />
@@ -82,11 +90,22 @@ export default function Login() {
                             />
                         </View>
 
-                        <AuthLink // Componente reutilizado
+                        <AuthLink
                             question="É novo por aqui?"
                             linkText="Crie sua conta"
                             onPress={handleGoToCadastro}
                         />
+
+                        {/* NOVO BOTÃO/LINK PARA LOGIN DO RESTAURANTE */}
+                        <View style={tw`flex-row mb-8`}>
+                            <Text style={tw`text-gray-600`}>Restaurante?</Text>
+                            <TouchableOpacity onPress={handleGoToAdminLogin} activeOpacity={0.7}>
+                                <Text style={tw`text-[#e65100] font-bold ml-2`}>
+                                    Entrar como Administrador
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
                     </View>
                 </View>
             </ScrollView>

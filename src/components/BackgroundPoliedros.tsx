@@ -1,4 +1,4 @@
-import { Image, View } from "react-native";
+import { Image } from "react-native";
 
 export default function BackgroundPoliedros() {
     return (
