@@ -29,7 +29,7 @@ export default function HomeOptionsGrid() {
                 />
                 <HomeOption
                     title="Pedidos"
-                    onPress={() => router.push("./pedido")}
+                    onPress={() => router.push("./pedidos")}
                     Icon={<Ionicons name="clipboard" size={24} color="#f7f7f7" />}
                     bgColor="#005B7F"
                     position="bottom-left"

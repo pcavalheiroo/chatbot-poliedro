@@ -1,25 +1,26 @@
-import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+// chatbot.tsx (agora mais compacto)
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
-    ActivityIndicator,
     Alert,
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    StyleSheet,
+    View,
+    ActivityIndicator,
     Text,
-    TextInput,
-    TouchableOpacity,
-    View
+    TouchableOpacity
 } from "react-native";
+import axios from "axios";
 import tw from "twrnc";
+import { Ionicons } from "@expo/vector-icons"; // Para o ícone de lixeira
+
 import AppHeader from "../components/AppHeader";
+import ChatMessage from "../components/ChatMessage"; // Importa o novo componente
+import BotCardapioMessage from "../components/BotCardapioMessage"; // Importa o novo componente
+import MessageInput from "../components/MessageInput"; // Importa o novo componente
 import { useUser } from "../contexts/UserContext";
 
-// Definição da URL base da API
-// Certifique-se de que este IP é o IP da sua máquina onde o backend está rodando
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL; 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface Message {
     id: string;
@@ -28,7 +29,6 @@ interface Message {
     timestamp: Date;
 }
 
-// Mensagem inicial do bot, movida para fora do componente para evitar recriação
 const INITIAL_BOT_MESSAGE: Message = {
     id: "1",
     text: "Olá! Sou o PoliChat. Posso te ajudar com:\n\n• Cardápio do dia \n• Fazer pedidos\n• Histórico de pedidos",
@@ -38,7 +38,6 @@ const INITIAL_BOT_MESSAGE: Message = {
 
 export default function Chatbot() {
     const { user } = useUser();
-    // Inicializa mensagens com a mensagem do bot.
     const [messages, setMessages] = useState<Message[]>([INITIAL_BOT_MESSAGE]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -49,34 +48,27 @@ export default function Chatbot() {
         flatListRef.current?.scrollToEnd({ animated: true });
     }, [messages]);
 
-    // Efeito para carregar o histórico de mensagens do usuário ao montar o componente
+    // Carrega o histórico de mensagens do usuário ao montar o componente
     useEffect(() => {
         const loadHistory = async () => {
             if (!user?.id) return;
-
             try {
-                const response = await axios.get<any[]>(
-                    `${API_BASE_URL}/chat/historico?usuario_id=${user.id}`
-                );
-
+                const response = await axios.get<any[]>(`${API_BASE_URL}/chat/historico?usuario_id=${user.id}`);
                 const formattedHistory: Message[] = response.data.map((msg) => ({
                     id: msg._id,
                     text: msg.mensagem,
                     sender: msg.origem === "usuario" ? "user" : "bot",
                     timestamp: new Date(msg.data),
                 }));
-
                 setMessages((prev) => [INITIAL_BOT_MESSAGE, ...formattedHistory]);
             } catch (error) {
                 console.error("Erro ao carregar histórico:", error);
-                // Opcional: exibir uma mensagem de erro para o usuário
             }
         };
-
         loadHistory();
-    }, [user?.id]); // Recarrega se o ID do usuário mudar
+    }, [user?.id]);
 
-    const sendMessage = async () => {
+    const sendMessage = useCallback(async () => {
         if (input.trim() === "" || isLoading || !user) return;
 
         const userMessage: Message = {
@@ -93,7 +85,7 @@ export default function Chatbot() {
         try {
             const res = await axios.post(`${API_BASE_URL}/chat`, {
                 usuario_id: user.id,
-                mensagem: userMessage.text, // Usar userMessage.text para garantir que é a mensagem enviada
+                mensagem: userMessage.text,
             });
 
             const botMessage: Message = {
@@ -102,7 +94,6 @@ export default function Chatbot() {
                 sender: "bot",
                 timestamp: new Date(),
             };
-
             setMessages((prev) => [...prev, botMessage]);
         } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
@@ -116,9 +107,9 @@ export default function Chatbot() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [input, isLoading, user]); // Dependências do useCallback
 
-    const clearHistory = async () => {
+    const clearHistory = useCallback(() => {
         if (!user?.id) return;
 
         Alert.alert(
@@ -130,10 +121,8 @@ export default function Chatbot() {
                     text: "Limpar",
                     onPress: async () => {
                         try {
-                            await axios.delete(
-                                `${API_BASE_URL}/chat/limpar_historico?usuario_id=${user.id}`
-                            );
-                            setMessages([INITIAL_BOT_MESSAGE]); // Reseta para a mensagem inicial
+                            await axios.delete(`${API_BASE_URL}/chat/limpar_historico?usuario_id=${user.id}`);
+                            setMessages([INITIAL_BOT_MESSAGE]);
                             Alert.alert("Sucesso", "Histórico limpo com sucesso!");
                         } catch (error) {
                             console.error("Erro ao limpar histórico:", error);
@@ -144,68 +133,15 @@ export default function Chatbot() {
             ],
             { cancelable: true }
         );
-    };
+    }, [user?.id]); // Dependências do useCallback
 
-    const renderItem = ({ item }: { item: Message }) => {
-        // Renderização especial para cardápio (se o bot formatar mensagens de cardápio de forma específica)
+    // Renderização do item da FlatList
+    const renderMessageItem = useCallback(({ item }: { item: Message }) => {
         if (item.sender === "bot" && item.text.includes("📋")) {
-            return (
-                <View style={tw`bg-gray-100 rounded-lg p-4 my-2 mx-4 border border-gray-200 self-start`}>
-                    {item.text.split('\n').map((line, index) => {
-                        if (line.includes("📋")) {
-                            return (
-                                <Text key={index} style={tw`font-bold text-lg text-center mb-2`}>
-                                    {line.replace(/\*/g, '')}
-                                </Text>
-                            );
-                        } else if (line.includes("🍽️")) {
-                            return (
-                                <Text key={index} style={tw`font-bold mt-3 text-[#005B7F]`}>
-                                    {line}
-                                </Text>
-                            );
-                        } else if (line.startsWith("→")) {
-                            const [nomePreco, ...descricao] = line.split("   "); // Atenção ao espaçamento
-                            return (
-                                <View key={index} style={tw`my-1`}>
-                                    <Text style={tw`font-medium`}>{nomePreco}</Text>
-                                    {descricao.length > 0 && (
-                                        <Text style={tw`text-gray-600 text-sm`}>{descricao.join(' ')}</Text>
-                                    )}
-                                </View>
-                            );
-                        }
-                        return null;
-                    })}
-                </View>
-            );
+            return <BotCardapioMessage text={item.text} />;
         }
-
-        // Renderização padrão para outras mensagens
-        return (
-            <View
-                style={[
-                    tw`my-2 mx-4 p-3 rounded-lg max-w-3/4`,
-                    item.sender === "user"
-                        ? tw`bg-[#005B7F] rounded-br-none self-end`
-                        : tw`bg-gray-100 rounded-bl-none border border-gray-200 self-start`,
-                    styles.messageShadow,
-                ]}
-            >
-                <Text style={item.sender === "user" ? tw`text-white` : tw`text-gray-800`}>
-                    {item.text}
-                </Text>
-                <Text
-                    style={[
-                        tw`text-xs mt-1`,
-                        item.sender === "user" ? tw`text-blue-200` : tw`text-gray-500`,
-                    ]}
-                >
-                    {item.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </Text>
-            </View>
-        );
-    };
+        return <ChatMessage {...item} />; // Passa todas as props do item para ChatMessage
+    }, []); // Sem dependências, pois a lógica de renderização é independente
 
     return (
         <KeyboardAvoidingView
@@ -228,7 +164,7 @@ export default function Chatbot() {
                         ref={flatListRef}
                         data={messages}
                         keyExtractor={(item) => item.id}
-                        renderItem={renderItem}
+                        renderItem={renderMessageItem}
                         contentContainerStyle={tw`pb-28 pt-4`}
                         showsVerticalScrollIndicator={false}
                         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -245,46 +181,13 @@ export default function Chatbot() {
                     )}
                 </View>
 
-                <View style={tw`absolute bottom-0 left-0 right-0 bg-white px-3 pt-3 pb-9 border-t border-gray-200`}>
-                    <View style={tw`flex-row items-center bg-gray-100 rounded-full px-6`}>
-                        <TextInput
-                            style={tw`flex-1 h-12 text-base text-gray-800`}
-                            placeholder="Digite sua mensagem..."
-                            placeholderTextColor="#9CA3AF"
-                            value={input}
-                            onChangeText={setInput}
-                            onSubmitEditing={sendMessage}
-                            editable={!isLoading}
-                            returnKeyType="send"
-                        />
-                        <TouchableOpacity
-                            onPress={sendMessage}
-                            disabled={input.trim() === "" || isLoading}
-                            style={tw`ml-2`}
-                        >
-                            <Ionicons
-                                name="send"
-                                size={24}
-                                color={input.trim() === "" || isLoading ? "#9CA3AF" : "#005B7F"}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                <MessageInput
+                    input={input}
+                    setInput={setInput}
+                    sendMessage={sendMessage}
+                    isLoading={isLoading}
+                />
             </View>
         </KeyboardAvoidingView>
     );
-}
-
-const styles = StyleSheet.create({
-    messageShadow: {
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    // Removido 'botaoLimpar' pois o estilo é feito com twrnc
-});
+} ''
