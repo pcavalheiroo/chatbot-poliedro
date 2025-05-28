@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import tw from 'twrnc';
 import AppHeader from '../../components/AppHeader';
@@ -38,9 +38,15 @@ export default function AdminDashboard() {
         </TouchableOpacity>
       </AppHeader>
 
-      <View style={tw`flex-1 items-center justify-start px-8 pt-12`}>
-        <Text style={tw`text-4xl font-bold mb-4 text-[#005B7F]`}>Olá, Admin!</Text>
-        <Text style={tw`text-lg text-gray-700 text-center mb-8`}>
+      <Image
+        source={require("../../assets/logos/logo.jpg")}
+        style={tw`w-48 h-48 mt-6 self-center rounded-full border-4 border-white shadow-lg`}
+        resizeMode="contain"
+      />
+
+      <View style={tw`flex-1 items-center justify-start px-8 pt-6`}>
+        <Text style={tw`text-3xl font-bold`}>Olá, Admin!</Text>
+        <Text style={tw`text-lg text-center mt-3 mb-7`}>
           Selecione uma opção para gerenciar o sistema.
         </Text>
 

@@ -1,17 +1,22 @@
 // contexts/UserContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Importe AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Defina tipos mais precisos
+type UserRole = 'admin' | 'user';
 
 interface User {
   id: string;
   email: string;
-  role?: string; // Mantido para admins, pode ser 'user' para usuários comuns
+  role: UserRole; // Tornado obrigatório
+  token?: string; // Adicionado para armazenar token JWT se necessário
 }
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  isLoadingUser: boolean; // Novo estado para indicar se o usuário está sendo carregado
+  isLoadingUser: boolean;
+  logout: () => Promise<void>; // Adicionado método explícito para logout
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -22,57 +27,70 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUserState] = useState<User | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true); // Inicialmente verdadeiro
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // Chave para armazenar o usuário no AsyncStorage
   const USER_STORAGE_KEY = '@PoliChatUser';
 
-  // Função para salvar o usuário no AsyncStorage
+  // Função para validar o usuário recuperado do storage
+  const isValidUser = (userData: any): userData is User => {
+    return (
+      userData &&
+      typeof userData.id === 'string' &&
+      typeof userData.email === 'string' &&
+      (userData.role === 'admin' || userData.role === 'user')
+    );
+  };
+
   const saveUser = async (userData: User | null) => {
     try {
       if (userData) {
+        if (!isValidUser(userData)) {
+          throw new Error('Invalid user data format');
+        }
         await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-        console.log('User saved to AsyncStorage:', userData.email);
       } else {
         await AsyncStorage.removeItem(USER_STORAGE_KEY);
-        console.log('User removed from AsyncStorage.');
       }
-      setUserState(userData); // Atualiza o estado do React
+      setUserState(userData);
     } catch (e) {
-      console.error('Failed to save/remove user from AsyncStorage:', e);
+      console.error('AsyncStorage error:', e);
+      // Não lançar erro para não quebrar o app, apenas logar
     }
   };
 
-  // Função para carregar o usuário do AsyncStorage ao iniciar o app
   const loadUser = async () => {
     try {
       const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (storedUser) {
-        const userData: User = JSON.parse(storedUser);
-        setUserState(userData); // Atualiza o estado do React
-        console.log('User loaded from AsyncStorage:', userData.email);
-      } else {
-        console.log('No user found in AsyncStorage.');
+        const parsedUser = JSON.parse(storedUser);
+        if (isValidUser(parsedUser)) {
+          setUserState(parsedUser);
+        } else {
+          console.warn('Invalid user data in storage, clearing...');
+          await AsyncStorage.removeItem(USER_STORAGE_KEY);
+        }
       }
     } catch (e) {
-      console.error('Failed to load user from AsyncStorage:', e);
+      console.error('Failed to load user:', e);
     } finally {
-      setIsLoadingUser(false); // Marca como carregado, independentemente do resultado
+      setIsLoadingUser(false);
     }
   };
 
-  // Carrega o usuário uma vez ao montar o UserProvider
-  useEffect(() => {
-    loadUser();
-  }, []); // Array de dependências vazio para rodar apenas na montagem
+  const logout = useCallback(async () => {
+    await saveUser(null);
+  }, []);
 
-  // Expondo setUser como saveUser para sempre persistir
   const setUser = useCallback((userData: User | null) => {
     saveUser(userData);
   }, []);
 
+  useEffect(() => {
+    loadUser();
+  }, []);
+
   return (
-    <UserContext.Provider value={{ user, setUser, isLoadingUser }}>
+    <UserContext.Provider value={{ user, setUser, isLoadingUser, logout }}>
       {children}
     </UserContext.Provider>
   );
