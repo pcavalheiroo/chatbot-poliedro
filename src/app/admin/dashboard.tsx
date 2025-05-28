@@ -1,38 +1,33 @@
-// app/(admin)/dashboard.tsx (Mantém as modificações anteriores)
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import tw from 'twrnc';
 import AppHeader from '../../components/AppHeader';
 import BackgroundPoliedros from '../../components/BackgroundPoliedros';
-import AdminOptionsGrid from '../../components/AdminOptionsGrid'; // Garanta que este caminho esteja correto
 import { useUser } from '../../contexts/UserContext';
+import DashboardOptionsGrid from "../../components/DashboardOptionsGrid";
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, setUser } = useUser();
+  const { setUser } = useUser();
 
   const handleLogout = useCallback(() => {
-    Alert.alert(
-      "Sair",
-      "Tem certeza que deseja sair do modo administrador?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sair",
-          onPress: () => {
-            setUser(null);
-            router.replace("/");
-          },
+    Alert.alert("Sair", "Deseja sair do modo administrador?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Sair",
+        onPress: () => {
+          setUser(null);
+          router.replace("/");
         },
-      ]
-    );
+      },
+    ]);
   }, [setUser, router]);
 
   return (
     <View style={tw`flex-1 bg-[#f7f7f7]`}>
-      <BackgroundPoliedros /> 
+      <BackgroundPoliedros />
 
       <AppHeader title="Painel de Controle">
         <TouchableOpacity
@@ -46,10 +41,10 @@ export default function AdminDashboard() {
       <View style={tw`flex-1 items-center justify-start px-8 pt-12`}>
         <Text style={tw`text-4xl font-bold mb-4 text-[#005B7F]`}>Olá, Admin!</Text>
         <Text style={tw`text-lg text-gray-700 text-center mb-8`}>
-          Selecione uma opção para gerenciar o restaurante.
+          Selecione uma opção para gerenciar o sistema.
         </Text>
 
-        <AdminOptionsGrid /> {/* Usando o grid de 3 opções */}
+        <DashboardOptionsGrid />
       </View>
     </View>
   );
