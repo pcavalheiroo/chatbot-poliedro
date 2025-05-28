@@ -1,14 +1,17 @@
-// app/(admin)/dashboard.tsx
+// app/(admin)/dashboard.tsx (Mantém as modificações anteriores)
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import tw from 'twrnc';
-import AppHeader from '../../components/AppHeader'; // Ajuste o caminho
+import AppHeader from '../../components/AppHeader';
+import BackgroundPoliedros from '../../components/BackgroundPoliedros';
+import AdminOptionsGrid from '../../components/AdminOptionsGrid'; // Garanta que este caminho esteja correto
 import { useUser } from '../../contexts/UserContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
 
   const handleLogout = useCallback(() => {
     Alert.alert(
@@ -19,8 +22,8 @@ export default function AdminDashboard() {
         {
           text: "Sair",
           onPress: () => {
-            setUser(null); // Limpa o usuário do contexto
-            router.replace("./login"); // Volta para a tela de login normal
+            setUser(null);
+            router.replace("/");
           },
         },
       ]
@@ -29,33 +32,24 @@ export default function AdminDashboard() {
 
   return (
     <View style={tw`flex-1 bg-[#f7f7f7]`}>
-      <AppHeader title="Dashboard Admin">
+      <BackgroundPoliedros /> 
+
+      <AppHeader title="Painel de Controle">
         <TouchableOpacity
           onPress={handleLogout}
-          style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-red-600`}
+          style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-transparent`}
         >
-          <Text style={tw`text-white text-xs`}>Sair</Text>
+          <Ionicons name="log-out-outline" size={25} color="white" />
         </TouchableOpacity>
       </AppHeader>
 
-      <View style={tw`flex-1 items-center justify-center p-4`}>
-        <Text style={tw`text-3xl font-bold mb-8 text-[#005B7F]`}>Painel de Controle</Text>
+      <View style={tw`flex-1 items-center justify-start px-8 pt-12`}>
+        <Text style={tw`text-4xl font-bold mb-4 text-[#005B7F]`}>Olá, Admin!</Text>
+        <Text style={tw`text-lg text-gray-700 text-center mb-8`}>
+          Selecione uma opção para gerenciar o restaurante.
+        </Text>
 
-        <TouchableOpacity
-          style={tw`w-full bg-[#FAA41F] py-4 rounded-lg mb-4 items-center`}
-          onPress={() => router.push('./admin/cardapio-gerenciar')}
-        >
-          <Text style={tw`text-white text-lg font-semibold`}>Gerenciar Cardápio</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={tw`w-full bg-[#EA5E3F] py-4 rounded-lg mb-4 items-center`}
-          onPress={() => router.push('./admin/pedidos-gerenciar')}
-        >
-          <Text style={tw`text-white text-lg font-semibold`}>Gerenciar Pedidos</Text>
-        </TouchableOpacity>
-
-        {/* Adicione mais opções aqui, se desejar */}
+        <AdminOptionsGrid /> {/* Usando o grid de 3 opções */}
       </View>
     </View>
   );

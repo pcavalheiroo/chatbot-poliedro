@@ -69,7 +69,11 @@ export default function AdminLogin() {
       <ScrollView contentContainerStyle={tw`flex-grow`} keyboardShouldPersistTaps="handled">
         <View style={tw`flex-1 bg-[#f7f7f7] relative`}>
           <BackgroundPoliedros />
-          <BackButton onPress={handleGoBack} color="#e65100" style={tw`top-12`} /> {/* Cor para o botão de voltar do admin */}
+          <BackButton
+            onPress={handleGoBack}
+            color="#e65100"
+            style={tw`top-12`} // ou remova se quiser usar o padrão do componente
+          />
 
           <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
             <AuthHeader
@@ -89,4 +93,4 @@ export default function AdminLogin() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+} 

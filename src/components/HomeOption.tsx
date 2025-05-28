@@ -1,5 +1,5 @@
-import { TouchableOpacity, Text, View, Platform } from "react-native";
 import { ReactNode } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
     title: string;
