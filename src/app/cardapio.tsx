@@ -3,7 +3,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, Text, View, ActivityIndicator } from 'react-native';
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
 import AppHeader from "../components/AppHeader";
-import MenuCategorySection from '../components/MenuCategorySection'; // Importe o novo componente
+import MenuCategorySection from '../components/MenuCategorySection';
+import PageContainer from '../components/PageContainer';
 import tw from "twrnc";
 import axios from 'axios';
 
@@ -100,13 +101,12 @@ export default function Cardapio() {
 
     return (
         <View style={tw`flex-1 bg-[#f7f7f7]`}>
-            <BackgroundPoliedros />
-
-            <AppHeader title="Cardápio da Cantina" />
-
-            <ScrollView style={tw`flex-1 pt-4 px-4`}>
-                {renderContent()}
-            </ScrollView>
+            <PageContainer>
+                <AppHeader title="Cardápio da Cantina" />
+                <ScrollView style={tw`flex-1 pt-4 px-4`}>
+                    {renderContent()}
+                </ScrollView>
+            </PageContainer>
         </View>
     );
 }

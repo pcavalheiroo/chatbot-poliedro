@@ -13,7 +13,6 @@ import {
 import axios from "axios";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons"; // Para o ícone de lixeira
-
 import AppHeader from "../components/AppHeader";
 import ChatMessage from "../components/ChatMessage"; // Importa o novo componente
 import BotCardapioMessage from "../components/BotCardapioMessage"; // Importa o novo componente

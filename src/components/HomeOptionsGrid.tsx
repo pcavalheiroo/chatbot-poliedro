@@ -35,8 +35,8 @@ export default function HomeOptionsGrid() {
                     position="bottom-left"
                 />
                 <HomeOption
-                    title="Histórico"
-                    onPress={() => router.push("./historico")}
+                    title="Info"
+                    onPress={() => router.push("./informacoes")}
                     Icon={<Ionicons name="time" size={24} color="#f7f7f7" />}
                     bgColor="#00BBE8"
                     position="bottom-right"

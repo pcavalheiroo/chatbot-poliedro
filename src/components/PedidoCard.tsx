@@ -4,6 +4,10 @@ import { View, Text } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import PedidoItemCard from './PedidoItemCard';
+import moment from 'moment';
+import 'moment/locale/pt-br'; 
+
+moment.locale('pt-br'); 
 
 // Interfaces
 interface PedidoItem {
@@ -18,7 +22,7 @@ interface Pedido {
     usuario_id: string;
     data_pedido: string;
     total: number;
-    status: 'pendente' | 'em preparo' | 'pronto' | 'finalizado' | 'cancelado';
+    status: 'em preparo' | 'pronto' | 'cancelado';
     itens: PedidoItem[];
 }
 
@@ -27,34 +31,20 @@ interface PedidoCardProps {
 }
 
 export default function PedidoCard({ pedido }: PedidoCardProps) {
-    const formattedDate = new Date(pedido.data_pedido).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    const formattedDateTime = moment(pedido.data_pedido).format('DD/MM/YYYY HH:mm');
 
     const getStatusDisplay = (status: string) => {
         let color = '#4B5563'; // text-gray-600
         let iconName: keyof typeof Ionicons.glyphMap = 'information-circle-outline';
 
         switch (status.toLowerCase()) {
-            case 'pendente':
-                color = '#D97706'; // text-yellow-600
-                iconName = 'time-outline';
-                break;
             case 'em preparo':
-                color = '#2563EB'; // text-blue-600
+                color = '#FAA41F'; // text-blue-600
                 iconName = 'construct-outline';
                 break;
             case 'pronto':
-                color = '#10B981'; // text-green-600
+                color = '#32973D'; // text-green-600
                 iconName = 'checkmark-circle-outline';
-                break;
-            case 'finalizado':
-                color = '#065F46'; // text-green-800
-                iconName = 'archive-outline';
                 break;
             case 'cancelado':
                 color = '#DC2626'; // text-red-600
@@ -77,7 +67,7 @@ export default function PedidoCard({ pedido }: PedidoCardProps) {
                 <Text style={tw`text-sm text-gray-500`}>
                     Pedido #{pedido._id.slice(-6).toUpperCase()}
                 </Text>
-                <Text style={tw`text-sm text-gray-500`}>{formattedDate}</Text>
+                <Text style={tw`text-sm text-gray-500`}>{formattedDateTime}</Text>
             </View>
 
             {/* Status do Pedido */}

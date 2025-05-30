@@ -5,6 +5,7 @@ import tw from "twrnc";
 import AppHeader from "../components/AppHeader";
 import PedidoCard from "../components/PedidoCard"; // Importa o componente refatorado
 import { useUser } from "../contexts/UserContext";
+import PageContainer from '../components/PageContainer';
 import axios from 'axios';
 
 // --- Interfaces (repetidas aqui ou pode importá-las de um arquivo de tipos global) ---
@@ -20,7 +21,7 @@ interface Pedido {
     usuario_id: string;
     data_pedido: string;
     total: number;
-    status: 'pendente' | 'em preparo' | 'pronto' | 'finalizado' | 'cancelado';
+    status: 'em preparo' | 'pronto' | 'cancelado';
     itens: PedidoItem[];
 }
 // --- Fim das Interfaces ---
@@ -122,11 +123,13 @@ export default function Pedidos() {
 
     return (
         <View style={tw`flex-1 bg-[#f7f7f7]`}>
-            <AppHeader title="Meus Pedidos" />
+            <PageContainer>
+                <AppHeader title="Meus Pedidos" />
 
-            <View style={tw`flex-1 pt-4 px-4`}>
-                {renderContent()}
-            </View>
+                <View style={tw`flex-1 pt-4 px-4`}>
+                    {renderContent()}
+                </View>
+            </PageContainer>
         </View>
     );
 }
