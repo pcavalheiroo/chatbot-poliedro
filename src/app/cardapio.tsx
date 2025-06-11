@@ -1,37 +1,34 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FlatList, Text, View, ActivityIndicator, Alert } from 'react-native';
-import tw from "twrnc";
+import { ScrollView, Text, View, ActivityIndicator, Alert } from 'react-native';
+import BackgroundPoliedros from "../components/BackgroundPoliedros";
 import AppHeader from "../components/AppHeader";
-import PedidoCard from "../components/PedidoCard";
-import { useUser } from "../contexts/UserContext";
+import MenuCategorySection from '../components/MenuCategorySection';
 import PageContainer from '../components/PageContainer';
+import tw from "twrnc";
 import axios from 'axios';
 import * as Animatable from 'react-native-animatable';
 import { useRouter } from 'expo-router';
-import BackgroundPoliedros from "../components/BackgroundPoliedros";
+import { useUser } from '../contexts/UserContext';
 
-interface PedidoItem {
+interface MenuItem {
     _id: string;
     nome: string;
+    descricao: string;
     preco: number;
-    quantidade: number;
+    categoria: string;
+    disponibilidade: boolean;
 }
 
-interface Pedido {
-    _id: string;
-    usuario_id: string;
-    data_pedido: string;
-    total: number;
-    status: 'em preparo' | 'pronto' | 'cancelado';
-    itens: PedidoItem[];
+interface CategorizedMenu {
+    [category: string]: MenuItem[];
 }
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export default function Pedidos() {
+export default function Cardapio() {
     const router = useRouter();
     const { user, setUser } = useUser();
-    const [pedidos, setPedidos] = useState<Pedido[]>([]);
+    const [cardapio, setCardapio] = useState<CategorizedMenu>({});
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -52,42 +49,33 @@ export default function Pedidos() {
         );
     }, [setUser, router]);
 
-    const fetchPedidos = useCallback(async () => {
-        if (!user?.id) {
-            setLoading(false);
-            setError("Faça login para ver seus pedidos.");
-            return;
-        }
-
+    const fetchAndCategorizeCardapio = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.get<Pedido[] | { aviso: string }>(`${API_BASE_URL}/pedidos/historico?usuario_id=${user.id}`);
+            const response = await axios.get<MenuItem[]>(`${API_BASE_URL}/cardapio`);
 
-            if ('aviso' in response.data && response.data.aviso) {
-                setPedidos([]);
-                setError(response.data.aviso);
-            } else if (Array.isArray(response.data)) {
-                setPedidos(response.data as Pedido[]);
-            } else {
-                setError("Formato de resposta inesperado do servidor.");
-            }
+            const categorizedData: CategorizedMenu = {};
+            response.data.forEach(item => {
+                const category = item.categoria || 'Outros';
+                if (!categorizedData[category]) {
+                    categorizedData[category] = [];
+                }
+                categorizedData[category].push(item);
+            });
+            setCardapio(categorizedData);
 
         } catch (err) {
-            console.error("Erro ao buscar pedidos:", err);
-            if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.erro || "Erro ao carregar pedidos");
-            } else {
-                setError("Ocorreu um erro inesperado.");
-            }
+            console.error("Erro ao buscar cardápio:", err);
+            setError("Não foi possível carregar o cardápio. Tente novamente mais tarde.");
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, []);
 
     useEffect(() => {
-        fetchPedidos();
-    }, [fetchPedidos]);
+        fetchAndCategorizeCardapio();
+    }, [fetchAndCategorizeCardapio]);
 
     const renderContent = () => {
         if (loading) {
@@ -98,9 +86,10 @@ export default function Pedidos() {
                     style={tw`flex-1 justify-center items-center`}
                 >
                     <Animatable.View
-                        animation="pulse"
+                        animation="rotate"
                         iterationCount="infinite"
-                        duration={1500}
+                        duration={2000}
+                        style={tw`mb-4`}
                     >
                         <ActivityIndicator size="large" color="#005B7F" />
                     </Animatable.View>
@@ -108,9 +97,18 @@ export default function Pedidos() {
                         animation="fadeInUp"
                         duration={800}
                         delay={300}
-                        style={tw`mt-4 text-lg text-gray-700`}
+                        style={tw`text-lg text-gray-700`}
                     >
-                        Carregando pedidos...
+                        Preparando o cardápio...
+                    </Animatable.Text>
+                    <Animatable.Text
+                        animation="pulse"
+                        iterationCount="infinite"
+                        duration={1500}
+                        delay={500}
+                        style={tw`text-sm text-gray-500 mt-2`}
+                    >
+                        Isso pode levar alguns instantes
                     </Animatable.Text>
                 </Animatable.View>
             );
@@ -124,15 +122,27 @@ export default function Pedidos() {
                     style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
                 >
                     <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
+                    <Animatable.View
+                        animation="bounceIn"
+                        duration={1000}
+                        delay={500}
+                    >
+                        <Text
+                            style={tw`text-blue-500 mt-4`}
+                            onPress={fetchAndCategorizeCardapio}
+                        >
+                            Tentar novamente
+                        </Text>
+                    </Animatable.View>
                 </Animatable.View>
             );
         }
 
-        if (pedidos.length === 0) {
+        if (Object.keys(cardapio).length === 0) {
             return (
                 <Animatable.View
-                    animation="bounceIn"
-                    duration={1200}
+                    animation="fadeIn"
+                    duration={1000}
                     style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
                 >
                     <Animatable.Text
@@ -141,8 +151,20 @@ export default function Pedidos() {
                         duration={2000}
                         style={tw`text-yellow-700 text-base text-center`}
                     >
-                        Você ainda não fez nenhum pedido. 😔
+                        O cardápio está vazio no momento. 😔
                     </Animatable.Text>
+                    <Animatable.View
+                        animation="bounceIn"
+                        duration={1000}
+                        delay={500}
+                    >
+                        <Text
+                            style={tw`text-blue-500 mt-4`}
+                            onPress={fetchAndCategorizeCardapio}
+                        >
+                            Recarregar
+                        </Text>
+                    </Animatable.View>
                 </Animatable.View>
             );
         }
@@ -153,21 +175,21 @@ export default function Pedidos() {
                 duration={800}
                 style={tw`flex-1`}
             >
-                <FlatList
-                    data={pedidos}
-                    keyExtractor={(item) => item._id}
-                    renderItem={({ item, index }) => (
+                <ScrollView style={tw`flex-1`}>
+                    {Object.keys(cardapio).sort().map((categoria, index) => (
                         <Animatable.View
+                            key={categoria}
                             animation="fadeInRight"
                             duration={600}
-                            delay={index * 150}
+                            delay={index * 200}
                         >
-                            <PedidoCard pedido={item} />
+                            <MenuCategorySection
+                                categoryName={categoria}
+                                items={cardapio[categoria]}
+                            />
                         </Animatable.View>
-                    )}
-                    contentContainerStyle={tw`pb-4`}
-                    showsVerticalScrollIndicator={false}
-                />
+                    ))}
+                </ScrollView>
             </Animatable.View>
         );
     };
@@ -181,7 +203,7 @@ export default function Pedidos() {
                     animation="fadeInDown"
                     duration={800}
                 >
-                    <AppHeader title="Meus Pedidos" />
+                    <AppHeader title="Cardápio da Cantina" />
                 </Animatable.View>
 
                 <View style={tw`flex-1 pt-4 px-4`}>
