@@ -1,8 +1,7 @@
-// app/_layout.tsx
 import { UserProvider, useUser } from '../contexts/UserContext';
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import '../styles/global.css'
-import { ActivityIndicator, View, Text } from 'react-native'; // Importe para tela de carregamento
+import { ActivityIndicator, View, Text } from 'react-native';
 
 // Componente Wrapper para a lógica de carregamento
 function RootLayoutContent() {
@@ -17,7 +16,15 @@ function RootLayoutContent() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack screenOptions={{ headerShown: false, headerTransparent: true, contentStyle: { backgroundColor: '#f7f7f7' } }}>
+      <Stack.Screen name="home" options={{ title: 'Home' }} />
+      <Stack.Screen name="cardapio" options={{ title: 'Cardápio' }} />
+      <Stack.Screen name="chatbot" options={{ title: 'Chatbot' }} />
+      <Stack.Screen name="pedidos" options={{ title: 'Pedidos' }} />
+      <Stack.Screen name="informaes" options={{ title: 'Info' }} />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {

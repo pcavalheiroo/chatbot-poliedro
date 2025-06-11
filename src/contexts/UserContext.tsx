@@ -1,64 +1,56 @@
-// contexts/UserContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Defina tipos mais precisos
 type UserRole = 'admin' | 'user';
 
 interface User {
   id: string;
   email: string;
-  role: UserRole; // Tornado obrigatório
-  token?: string; // Adicionado para armazenar token JWT se necessário
+  role: UserRole;
+  token?: string;
 }
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   isLoadingUser: boolean;
-  logout: () => Promise<void>; // Adicionado método explícito para logout
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
+const USER_STORAGE_KEY = '@PoliChatUser';
 
-interface UserProviderProps {
-  children: ReactNode;
-}
-
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUserState] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  const USER_STORAGE_KEY = '@PoliChatUser';
+  const isValidUser = (data: any): data is User =>
+    data &&
+    typeof data.id === 'string' &&
+    typeof data.email === 'string' &&
+    (data.role === 'admin' || data.role === 'user');
 
-  // Função para validar o usuário recuperado do storage
-  const isValidUser = (userData: any): userData is User => {
-    return (
-      userData &&
-      typeof userData.id === 'string' &&
-      typeof userData.email === 'string' &&
-      (userData.role === 'admin' || userData.role === 'user')
-    );
-  };
-
-  const saveUser = async (userData: User | null) => {
+  const saveUser = useCallback(async (userData: User | null) => {
     try {
       if (userData) {
-        if (!isValidUser(userData)) {
-          throw new Error('Invalid user data format');
-        }
         await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
       } else {
         await AsyncStorage.removeItem(USER_STORAGE_KEY);
       }
       setUserState(userData);
     } catch (e) {
-      console.error('AsyncStorage error:', e);
-      // Não lançar erro para não quebrar o app, apenas logar
+      console.error('Erro ao salvar usuário:', e);
     }
-  };
+  }, []);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (storedUser) {
@@ -66,28 +58,28 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         if (isValidUser(parsedUser)) {
           setUserState(parsedUser);
         } else {
-          console.warn('Invalid user data in storage, clearing...');
+          console.warn('Usuário inválido no AsyncStorage. Limpando...');
           await AsyncStorage.removeItem(USER_STORAGE_KEY);
         }
       }
     } catch (e) {
-      console.error('Failed to load user:', e);
+      console.error('Erro ao carregar usuário:', e);
     } finally {
       setIsLoadingUser(false);
     }
-  };
+  }, []);
 
   const logout = useCallback(async () => {
     await saveUser(null);
-  }, []);
+  }, [saveUser]);
 
   const setUser = useCallback((userData: User | null) => {
     saveUser(userData);
-  }, []);
+  }, [saveUser]);
 
   useEffect(() => {
     loadUser();
-  }, []);
+  }, [loadUser]);
 
   return (
     <UserContext.Provider value={{ user, setUser, isLoadingUser, logout }}>

@@ -1,4 +1,3 @@
-// app/(admin)/usuarios-gerenciar.tsx
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +5,7 @@ import tw from 'twrnc';
 import axios from 'axios';
 import AppHeader from '../../components/AppHeader';
 import { useUser } from '../../contexts/UserContext';
+import * as Animatable from 'react-native-animatable';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -27,8 +27,6 @@ export default function UsuariosGerenciar() {
     const [newPassword, setNewPassword] = useState('');
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-
-    // --- Funções de Fetch e Gerenciamento de Usuários ---
 
     const fetchUsers = useCallback(async () => {
         if (!user || user.role !== 'admin') {
@@ -53,12 +51,11 @@ export default function UsuariosGerenciar() {
         fetchUsers();
     }, [fetchUsers]);
 
-    // <<<<<<<<<<<<<<< ESTA É A FUNÇÃO QUE ESTAVA DANDO ERRO NO ESCOPO >>>>>>>>>>>>>>>
     const handleCloseModal = useCallback(() => {
         setModalVisible(false);
-        setIsAddingUser(false); // Reseta o estado de loading do modal
-        setNewEmail(''); // Limpa o email
-        setNewPassword(''); // Limpa a senha
+        setIsAddingUser(false);
+        setNewEmail('');
+        setNewPassword('');
     }, []);
 
     const handleAddUser = useCallback(async () => {
@@ -74,7 +71,7 @@ export default function UsuariosGerenciar() {
                 role: 'user'
             });
             Alert.alert("Sucesso", response.data.mensagem || "Usuário adicionado!");
-            handleCloseModal(); // <<<<<<<<<<< AQUI ELA É CHAMADA, E ESTÁ NO ESCOPO CORRETO >>>>>>>>>
+            handleCloseModal();
             fetchUsers();
         } catch (err: any) {
             console.error("Erro ao adicionar usuário:", err);
@@ -83,7 +80,7 @@ export default function UsuariosGerenciar() {
         } finally {
             setIsAddingUser(false);
         }
-    }, [newEmail, newPassword, fetchUsers, handleCloseModal]); // Adicionado handleCloseModal como dependência
+    }, [newEmail, newPassword, fetchUsers, handleCloseModal]);
 
     const handleDeleteUser = useCallback(async (userId: string, userEmail: string) => {
         Alert.alert(
@@ -121,8 +118,13 @@ export default function UsuariosGerenciar() {
         );
     }, [users, searchTerm]);
 
-    const renderUserItem = useCallback(({ item }: { item: UserAdmin }) => (
-        <View style={tw`bg-white p-4 m-2 rounded-lg shadow-md flex-row justify-between items-center`}>
+    const renderUserItem = useCallback(({ item, index }: { item: UserAdmin; index: number }) => (
+        <Animatable.View
+            animation="fadeInRight"
+            duration={600}
+            delay={index * 100}
+            style={tw`bg-white p-4 m-2 rounded-lg shadow-md flex-row justify-between items-center`}
+        >
             <View style={tw`flex-1`}>
                 <Text style={tw`text-lg font-bold text-[#005B7F]`}>{item.email}</Text>
                 <Text style={tw`text-sm text-gray-500`}>ID: {item._id.slice(-8)}</Text>
@@ -130,38 +132,56 @@ export default function UsuariosGerenciar() {
             <TouchableOpacity onPress={() => handleDeleteUser(item._id, item.email)} style={tw`ml-4 p-2`}>
                 <Ionicons name="trash-outline" size={24} color={tw.color('red-500')!} />
             </TouchableOpacity>
-        </View>
+        </Animatable.View>
     ), [handleDeleteUser]);
 
     return (
         <View style={tw`flex-1 bg-[#f7f7f7]`}>
-            <AppHeader title="Gerenciar Usuários" />
+            <Animatable.View animation="fadeInDown" duration={800} delay={100}>
+                <AppHeader title="Gerenciar Usuários" />
+            </Animatable.View>
 
-            <View style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
+            <Animatable.View animation="fadeInLeft" duration={800} delay={300} style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
                 <Ionicons name="search" size={20} color={tw.color('gray-500')!} style={tw`mr-1`} />
                 <TextInput
                     style={tw`flex-1 p-2 text-gray-800`}
+                    autoCorrect={true}
+                    autoComplete="off"
+                    spellCheck={true}
                     placeholder="Buscar por email ou ID do usuário..."
                     placeholderTextColor={tw.color('gray-500')!}
                     value={searchTerm}
                     onChangeText={setSearchTerm}
                 />
-            </View>
+            </Animatable.View>
 
-            <View style={tw`flex-1 px-4`}>
+            <Animatable.View animation="fadeIn" duration={1000} delay={500} style={tw`flex-1 px-4`}>
                 {loading ? (
-                    <View style={tw`flex-1 justify-center items-center`}>
+                    <Animatable.View
+                        animation="pulse"
+                        iterationCount="infinite"
+                        duration={1500}
+                        style={tw`flex-1 justify-center items-center`}
+                    >
                         <ActivityIndicator size="large" color="#005B7F" />
                         <Text style={tw`mt-4 text-lg text-gray-700`}>Carregando usuários...</Text>
-                    </View>
+                    </Animatable.View>
                 ) : error ? (
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}>
+                    <Animatable.View
+                        animation="shake"
+                        duration={800}
+                        style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
+                    >
                         <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
-                    </View>
+                    </Animatable.View>
                 ) : filteredUsers.length === 0 ? (
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}>
+                    <Animatable.View
+                        animation="bounceIn"
+                        duration={1000}
+                        style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
+                    >
                         <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum usuário encontrado para esta busca. 🔎" : "Nenhum usuário cadastrado. 😔"}</Text>
-                    </View>
+                    </Animatable.View>
                 ) : (
                     <FlatList
                         data={filteredUsers}
@@ -171,24 +191,25 @@ export default function UsuariosGerenciar() {
                         showsVerticalScrollIndicator={false}
                     />
                 )}
-            </View>
+            </Animatable.View>
 
-            <TouchableOpacity
-                onPress={() => setModalVisible(true)}
-                style={tw`absolute bottom-6 right-6 bg-[#FAA41F] w-14 h-14 rounded-full justify-center items-center shadow-lg`}
-            >
-                <Ionicons name="add" size={30} color="#fff" />
-            </TouchableOpacity>
+            <Animatable.View animation="bounceIn" duration={1000} delay={700}>
+                <TouchableOpacity
+                    onPress={() => setModalVisible(true)}
+                    style={tw`absolute bottom-6 right-6 bg-[#FAA41F] w-14 h-14 rounded-full justify-center items-center shadow-lg`}
+                >
+                    <Ionicons name="add" size={30} color="#fff" />
+                </TouchableOpacity>
+            </Animatable.View>
 
-            {/* Modal de Adição de Usuário */}
             <Modal
                 visible={modalVisible}
                 animationType="fade"
                 transparent
-                onRequestClose={handleCloseModal} // <<<<<<<<<<< AQUI ESTAVA O PROBLEMA DE ESCOPO >>>>>>>>>
+                onRequestClose={handleCloseModal}
             >
                 <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
-                    <View style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
+                    <Animatable.View animation="zoomIn" duration={500} style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
                         <Text style={tw`text-xl font-bold mb-4 text-center text-[#005B7F]`}>Adicionar Usuário</Text>
                         <TextInput
                             placeholder="Email do novo usuário"
@@ -209,7 +230,7 @@ export default function UsuariosGerenciar() {
                         />
                         <View style={tw`flex-row justify-between`}>
                             <TouchableOpacity
-                                onPress={handleCloseModal} // <<<<<<<<<<< AQUI ESTAVA O PROBLEMA DE ESCOPO >>>>>>>>>
+                                onPress={handleCloseModal}
                                 style={tw`bg-gray-300 px-5 py-3 rounded-lg`}
                             >
                                 <Text style={tw`text-gray-800 font-semibold`}>Cancelar</Text>
@@ -226,7 +247,7 @@ export default function UsuariosGerenciar() {
                                 )}
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    </Animatable.View>
                 </View>
             </Modal>
         </View>

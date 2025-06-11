@@ -1,10 +1,10 @@
 // components/BackButton.tsx
-
 import React from "react";
 import { TouchableOpacity, StyleProp, ViewStyle } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons"; // Importação direta para evitar ambiguidade
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
+import * as Animatable from "react-native-animatable";
 
 interface BackButtonProps {
   onPress?: () => void;
@@ -12,11 +12,7 @@ interface BackButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export default function BackButton({
-  onPress,
-  color = "#2a52be",
-  style
-}: BackButtonProps) {
+export default function BackButton({ onPress, color = "#2a52be", style }: BackButtonProps) {
   const router = useRouter();
 
   const handlePress = () => {
@@ -37,13 +33,14 @@ export default function BackButton({
   };
 
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      style={[tw`absolute top-14 left-6 z-50`, style]}
-      accessibilityRole="button"
-      accessibilityLabel="Voltar"
-    >
-      <Ionicons name="arrow-back" size={24} color={color} />
-    </TouchableOpacity>
+    <Animatable.View animation="fadeInLeft" duration={600} style={[tw`absolute top-14 left-6 z-50`, style]}>
+      <TouchableOpacity
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+      >
+        <Ionicons name="arrow-back" size={24} color={color} />
+      </TouchableOpacity>
+    </Animatable.View>
   );
 }

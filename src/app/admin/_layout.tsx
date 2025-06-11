@@ -1,7 +1,5 @@
-// app/(admin)/_layout.tsx
 import { Stack, Redirect, useSegments } from 'expo-router';
 import { useUser } from '../../contexts/UserContext';
-import { View, Text, ActivityIndicator } from 'react-native';
 
 export default function AdminLayout() {
   const { user } = useUser();

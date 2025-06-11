@@ -28,6 +28,9 @@ export default function AuthForm({
             <View style={tw`mb-4`}>
                 <TextInput
                     style={tw`border ${isFocusedEmail ? 'border-[#2a52be]' : 'border-gray-300'} p-3 rounded-lg`}
+                    autoCorrect={true}
+                    autoComplete="off"
+                    spellCheck={true}
                     placeholder="Email"
                     placeholderTextColor="#9ca3af"
                     value={email}

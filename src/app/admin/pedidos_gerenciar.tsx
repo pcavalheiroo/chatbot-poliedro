@@ -1,16 +1,13 @@
-// app/(admin)/pedidos-gerenciar.tsx
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput } from 'react-native';
-import { Ionicons } from "@expo/vector-icons"; // Certifique-se de importar Ionicons
+import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import axios from 'axios';
 import AppHeader from '../../components/AppHeader';
-import PedidoAdminCard from '../../components/PedidoAdminCard'; // Importa o novo componente
+import PedidoAdminCard from '../../components/PedidoAdminCard';
 import { useUser } from '../../contexts/UserContext';
+import * as Animatable from 'react-native-animatable';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-
-// --- Interfaces (Devem ser as mesmas do PedidoAdminCard para consistência) ---
 interface PedidoItem {
     _id: string;
     nome: string;
@@ -27,16 +24,15 @@ interface PedidoAdmin {
     status: 'pendente' | 'em preparo' | 'pronto' | 'finalizado' | 'cancelado';
     itens: PedidoItem[];
 }
-// --- Fim das Interfaces ---
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function PedidosGerenciar() {
     const { user } = useUser();
     const [pedidos, setPedidos] = useState<PedidoAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState(''); // Estado para o termo de busca
-
-    // --- Funções de Fetch e Gerenciamento ---
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchPedidos = useCallback(async () => {
         if (!user || user.role !== 'admin') {
@@ -65,7 +61,7 @@ export default function PedidosGerenciar() {
         try {
             await axios.put(`${API_BASE_URL}/admin/pedidos/${pedidoId}/status`, { status: newStatus });
             Alert.alert("Sucesso", `Status do pedido ${pedidoId.slice(-6).toUpperCase()} atualizado para ${newStatus.toUpperCase()}!`);
-            fetchPedidos(); // Recarrega a lista
+            fetchPedidos();
         } catch (err: any) {
             console.error("Erro ao atualizar status:", err);
             const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao atualizar status.";
@@ -86,7 +82,7 @@ export default function PedidosGerenciar() {
                         try {
                             await axios.delete(`${API_BASE_URL}/admin/pedidos/${pedidoId}`);
                             Alert.alert("Sucesso", "Pedido excluído!");
-                            fetchPedidos(); // Recarrega a lista
+                            fetchPedidos();
                         } catch (err: any) {
                             console.error("Erro ao excluir pedido:", err);
                             const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir pedido.";
@@ -98,68 +94,89 @@ export default function PedidosGerenciar() {
         );
     }, [fetchPedidos]);
 
-    // Lógica de filtro para os pedidos
     const filteredPedidos = useMemo(() => {
         if (!searchTerm) {
             return pedidos;
         }
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         return pedidos.filter(pedidoItem =>
-            (pedidoItem.usuario_info?.nome?.toLowerCase().includes(lowerCaseSearchTerm)) || // Busca por nome do cliente
-            (pedidoItem.usuario_info?.id?.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) || // Busca por ID do cliente
-            (pedidoItem.status.toLowerCase().includes(lowerCaseSearchTerm)) || // Busca por status
-            (pedidoItem._id.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) || // Busca por ID do pedido
-            pedidoItem.itens.some(item => item.nome.toLowerCase().includes(lowerCaseSearchTerm)) // Busca por nome do item no pedido
+            (pedidoItem.usuario_info?.nome?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (pedidoItem.usuario_info?.id?.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) ||
+            (pedidoItem.status.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (pedidoItem._id.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) ||
+            pedidoItem.itens.some(item => item.nome.toLowerCase().includes(lowerCaseSearchTerm))
         );
     }, [pedidos, searchTerm]);
 
-    // --- Renderização Principal ---
     return (
         <View style={tw`flex-1 bg-[#f7f7f7]`}>
-            <AppHeader title="Gerenciar Pedidos" />
+            <Animatable.View animation="fadeInDown" duration={800} delay={100}>
+                <AppHeader title="Gerenciar Pedidos" />
+            </Animatable.View>
 
-            {/* Campo de busca */}
-            <View style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
+            <Animatable.View animation="fadeInLeft" duration={800} delay={300} style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
                 <Ionicons name="search" size={20} color={tw.color('gray-500')!} style={tw`mr-1`} />
                 <TextInput
                     style={tw`flex-1 p-2 text-gray-800`}
+                    autoCorrect={true}
+                    autoComplete="off"
+                    spellCheck={true}
                     placeholder="Buscar por cliente, status, item ou ID do pedido..."
                     placeholderTextColor={tw.color('gray-500')!}
                     value={searchTerm}
                     onChangeText={setSearchTerm}
                 />
-            </View>
+            </Animatable.View>
 
-            <View style={tw`flex-1 px-4`}>
+            <Animatable.View animation="fadeIn" duration={1000} delay={500} style={tw`flex-1 px-4`}>
                 {loading ? (
-                    <View style={tw`flex-1 justify-center items-center`}>
+                    <Animatable.View
+                        animation="pulse"
+                        iterationCount="infinite"
+                        duration={1500}
+                        style={tw`flex-1 justify-center items-center`}
+                    >
                         <ActivityIndicator size="large" color="#005B7F" />
                         <Text style={tw`mt-4 text-lg text-gray-700`}>Carregando pedidos...</Text>
-                    </View>
+                    </Animatable.View>
                 ) : error ? (
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}>
+                    <Animatable.View
+                        animation="shake"
+                        duration={800}
+                        style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
+                    >
                         <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
-                    </View>
-                ) : filteredPedidos.length === 0 ? ( // Usa filteredPedidos
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}>
+                    </Animatable.View>
+                ) : filteredPedidos.length === 0 ? (
+                    <Animatable.View
+                        animation="bounceIn"
+                        duration={1000}
+                        style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
+                    >
                         <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum pedido encontrado para esta busca. 🔎" : "Nenhum pedido ativo. 😔"}</Text>
-                    </View>
+                    </Animatable.View>
                 ) : (
                     <FlatList
-                        data={filteredPedidos} // Usa filteredPedidos
+                        data={filteredPedidos}
                         keyExtractor={(item) => item._id}
-                        renderItem={({ item }) => (
-                            <PedidoAdminCard
-                                pedido={item}
-                                onUpdateStatus={handleUpdateStatus}
-                                onDeletePedido={handleDeletePedido}
-                            />
+                        renderItem={({ item, index }) => (
+                            <Animatable.View
+                                animation="fadeInRight"
+                                duration={600}
+                                delay={index * 100}
+                            >
+                                <PedidoAdminCard
+                                    pedido={item}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onDeletePedido={handleDeletePedido}
+                                />
+                            </Animatable.View>
                         )}
                         contentContainerStyle={tw`pb-4`}
                         showsVerticalScrollIndicator={false}
                     />
                 )}
-            </View>
+            </Animatable.View>
         </View>
     );
 }

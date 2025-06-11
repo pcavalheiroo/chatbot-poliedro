@@ -1,46 +1,45 @@
-// app/admin/login.tsx
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   View,
-  Alert
+  Alert,
+  Keyboard
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import tw from 'twrnc';
+import * as Animatable from 'react-native-animatable';
 
-import AuthForm from '../../components/AuthForm'; // Ajuste o caminho se necessário
-import BackgroundPoliedros from '../../components/BackgroundPoliedros'; // Ajuste o caminho
-import AuthHeader from '../../components/AuthHeader'; // Ajuste o caminho
-import BackButton from '../../components/BackButton'; // Ajuste o caminho
-import { useUser } from '../../contexts/UserContext'; // Usaremos o mesmo contexto para o admin
+import AuthForm from '../../components/AuthForm';
+import BackgroundPoliedros from '../../components/BackgroundPoliedros';
+import AuthHeader from '../../components/AuthHeader';
+import BackButton from '../../components/BackButton';
+import { useUser } from '../../contexts/UserContext';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+const AUTH_FORM_HEIGHT_ADMIN_LOGIN = 250;
+const KEYBOARD_VERTICAL_OFFSET_ADMIN = Platform.OS === "ios" ? -AUTH_FORM_HEIGHT_ADMIN_LOGIN / 2 : 0;
+
 export default function AdminLogin() {
   const router = useRouter();
-  const { setUser } = useUser(); // Reutiliza o contexto de usuário, mas você pode criar um AdminContext se precisar
+  const { setUser } = useUser();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleAdminLogin = useCallback(async ({ email, senha }: { email: string; senha: string }) => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/admins/login`, // Rota de login do administrador
+        `${API_BASE_URL}/admins/login`,
         { email, senha },
-        {
-          timeout: 5000,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { timeout: 5000, headers: { 'Content-Type': 'application/json' } }
       );
 
       if (response.data._id) {
-        // Armazena as credenciais do admin no contexto de usuário
-        // Você pode querer diferenciar entre usuário normal e admin aqui,
-        // talvez adicionando um campo 'role: "admin"' ao objeto do usuário
         setUser({ id: response.data._id, email: response.data.email, role: "admin" });
         Alert.alert("Sucesso", `Bem-vindo, ${response.data.nome || 'Administrador'}!`);
-        router.replace("/admin/dashboard"); // Redireciona para o dashboard do admin
+        router.replace("/admin/dashboard");
       } else {
         throw new Error("Resposta inválida do servidor.");
       }
@@ -57,40 +56,71 @@ export default function AdminLogin() {
   }, [setUser, router]);
 
   const handleGoBack = useCallback(() => {
-    router.back(); // Volta para a tela anterior (login normal)
+    router.back();
   }, [router]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (e) => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true });
+        }
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={tw`flex-1 bg-[#f7f7f7]`}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? KEYBOARD_VERTICAL_OFFSET_ADMIN : 0}
     >
-      <ScrollView contentContainerStyle={tw`flex-grow`} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={tw`flex-grow`}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={tw`flex-1 bg-[#f7f7f7] relative`}>
-          <BackgroundPoliedros />
-          <BackButton
-            onPress={handleGoBack}
-            color="#e65100"
-            style={tw`top-12`} // ou remova se quiser usar o padrão do componente
-          />
+          <Animatable.View animation="fadeIn" duration={1200} style={tw`absolute inset-0`}>
+            <BackgroundPoliedros />
+          </Animatable.View>
+          <Animatable.View animation="fadeInLeft" duration={800} delay={200}>
+            <BackButton
+              onPress={handleGoBack}
+              color="#e65100"
+              style={tw`top-12`}
+            />
+          </Animatable.View>
 
           <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-            <AuthHeader
-              title="Acesso do Restaurante"
-              subtitle="Faça login como administrador para gerenciar"
-            />
+            <Animatable.View animation="fadeInDown" duration={800} delay={400}>
+              <AuthHeader
+                title="Acesso do Restaurante"
+                subtitle="Faça login como administrador para gerenciar"
+              />
+            </Animatable.View>
 
-            <View style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
+            <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
               <AuthForm
-                isCadastro={false} // Não é para cadastro de admin aqui
+                isCadastro={false}
                 onSubmit={handleAdminLogin}
                 buttonText="Entrar como Admin"
               />
-            </View>
+            </Animatable.View>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
-} 
+}

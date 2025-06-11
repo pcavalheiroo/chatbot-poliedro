@@ -1,6 +1,6 @@
 // components/MessageInput.tsx
 import React from 'react';
-import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 
@@ -12,11 +12,21 @@ interface MessageInputProps {
 }
 
 export default function MessageInput({ input, setInput, sendMessage, isLoading }: MessageInputProps) {
+    // Para iOS, adicionamos um padding extra na parte inferior para a "safe area" do teclado.
+    // Isso evita que o conteúdo do TextInput fique escondido atrás da borda inferior do teclado.
+    const safeAreaBottomPadding = Platform.OS === 'ios' ? tw`pb-6` : tw`pb-2`; // 20px para iOS, 8px para Android (ajuste conforme o seu design)
+
     return (
-        <View style={tw`absolute bottom-0 left-0 right-0 bg-white px-3 pt-3 pb-9 border-t border-gray-200`}>
+        <View style={[
+            tw`bg-white px-3 pt-3`,
+            safeAreaBottomPadding
+        ]}>
             <View style={tw`flex-row items-center bg-gray-100 rounded-full px-6`}>
                 <TextInput
                     style={tw`flex-1 h-12 text-base text-gray-800`}
+                    autoCorrect={true}
+                    autoComplete="off"
+                    spellCheck={true}
                     placeholder="Digite sua mensagem..."
                     placeholderTextColor="#9CA3AF"
                     value={input}

@@ -1,4 +1,3 @@
-// chatbot.tsx (agora mais compacto)
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
     Alert,
@@ -12,12 +11,13 @@ import {
 } from "react-native";
 import axios from "axios";
 import tw from "twrnc";
-import { Ionicons } from "@expo/vector-icons"; // Para o ícone de lixeira
+import { Ionicons } from "@expo/vector-icons";
 import AppHeader from "../components/AppHeader";
-import ChatMessage from "../components/ChatMessage"; // Importa o novo componente
-import BotCardapioMessage from "../components/BotCardapioMessage"; // Importa o novo componente
-import MessageInput from "../components/MessageInput"; // Importa o novo componente
+import ChatMessage from "../components/ChatMessage";
+import BotCardapioMessage from "../components/BotCardapioMessage";
+import MessageInput from "../components/MessageInput";
 import { useUser } from "../contexts/UserContext";
+import * as Animatable from "react-native-animatable";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -35,6 +35,9 @@ const INITIAL_BOT_MESSAGE: Message = {
     timestamp: new Date(),
 };
 
+const MESSAGE_INPUT_HEIGHT_IOS = 80;
+const MESSAGE_INPUT_HEIGHT_ANDROID = 68;
+
 export default function Chatbot() {
     const { user } = useUser();
     const [messages, setMessages] = useState<Message[]>([INITIAL_BOT_MESSAGE]);
@@ -42,12 +45,13 @@ export default function Chatbot() {
     const [isLoading, setIsLoading] = useState(false);
     const flatListRef = useRef<FlatList<Message>>(null);
 
-    // Efeito para rolar a lista para o final quando novas mensagens chegam
     useEffect(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+        const timer = setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        return () => clearTimeout(timer);
     }, [messages]);
 
-    // Carrega o histórico de mensagens do usuário ao montar o componente
     useEffect(() => {
         const loadHistory = async () => {
             if (!user?.id) return;
@@ -106,7 +110,7 @@ export default function Chatbot() {
         } finally {
             setIsLoading(false);
         }
-    }, [input, isLoading, user]); // Dependências do useCallback
+    }, [input, isLoading, user]);
 
     const clearHistory = useCallback(() => {
         if (!user?.id) return;
@@ -132,61 +136,80 @@ export default function Chatbot() {
             ],
             { cancelable: true }
         );
-    }, [user?.id]); // Dependências do useCallback
+    }, [user?.id]);
 
-    // Renderização do item da FlatList
     const renderMessageItem = useCallback(({ item }: { item: Message }) => {
         if (item.sender === "bot" && item.text.includes("📋")) {
-            return <BotCardapioMessage text={item.text} />;
+            return <Animatable.View animation="fadeIn" duration={300}><BotCardapioMessage text={item.text} /></Animatable.View>;
         }
-        return <ChatMessage {...item} />; // Passa todas as props do item para ChatMessage
-    }, []); // Sem dependências, pois a lógica de renderização é independente
+        return <Animatable.View animation="fadeIn" duration={300}><ChatMessage {...item} /></Animatable.View>;
+    }, []);
+
+    const flatListPaddingBottom = Platform.OS === 'ios' ? MESSAGE_INPUT_HEIGHT_IOS : MESSAGE_INPUT_HEIGHT_ANDROID;
 
     return (
         <KeyboardAvoidingView
             style={tw`flex-1 bg-[#f7f7f7]`}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
             <View style={tw`flex-1`}>
-                <AppHeader title="Assistente da Cantina">
-                    <TouchableOpacity
-                        onPress={clearHistory}
-                        style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-transparent`}
-                    >
-                        <Ionicons name="trash-outline" size={25} color="white" />
-                    </TouchableOpacity>
-                </AppHeader>
+                <Animatable.View animation="fadeInDown" duration={800} delay={100}>
+                    <AppHeader title="Assistente da Cantina">
+                        <TouchableOpacity
+                            onPress={clearHistory}
+                            style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-transparent`}
+                        >
+                            <Animatable.View animation="bounceIn" duration={800} delay={500}>
+                                <Ionicons name="trash-outline" size={25} color="white" />
+                            </Animatable.View>
+                        </TouchableOpacity>
+                    </AppHeader>
+                </Animatable.View>
 
-                <View style={tw`flex-1`}>
+                <Animatable.View animation="fadeIn" duration={800} delay={300} style={tw`flex-1`}>
                     <FlatList
                         ref={flatListRef}
                         data={messages}
                         keyExtractor={(item) => item.id}
                         renderItem={renderMessageItem}
-                        contentContainerStyle={tw`pb-28 pt-4`}
+                        contentContainerStyle={{ paddingBottom: flatListPaddingBottom, paddingTop: 16 }}
                         showsVerticalScrollIndicator={false}
-                        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                        onContentSizeChange={() => {
+                            if (Platform.OS === 'ios') {
+                                setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
+                            } else {
+                                flatListRef.current?.scrollToEnd({ animated: true });
+                            }
+                        }}
+                        onLayout={() => {
+                             if (Platform.OS === 'ios') {
+                                 setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
+                             } else {
+                                 flatListRef.current?.scrollToEnd({ animated: true });
+                             }
+                        }}
                     />
 
                     {isLoading && (
-                        <View style={tw`bg-gray-100 rounded-bl-none border border-gray-200 self-start p-3 mx-4 my-2 max-w-3/4`}>
+                        <Animatable.View animation="fadeIn" duration={300} style={tw`bg-gray-100 rounded-bl-none border border-gray-200 self-start p-3 mx-4 my-2 max-w-3/4`}>
                             <View style={tw`flex-row items-center`}>
                                 <ActivityIndicator size="small" color="#005B7F" style={tw`mr-2`} />
                                 <Text style={tw`text-gray-500 italic`}>Digitando...</Text>
                             </View>
-                        </View>
+                        </Animatable.View>
                     )}
-                </View>
+                </Animatable.View>
 
-                <MessageInput
-                    input={input}
-                    setInput={setInput}
-                    sendMessage={sendMessage}
-                    isLoading={isLoading}
-                />
+                <Animatable.View animation="fadeInUp" duration={800} delay={200}>
+                    <MessageInput
+                        input={input}
+                        setInput={setInput}
+                        sendMessage={sendMessage}
+                        isLoading={isLoading}
+                    />
+                </Animatable.View>
             </View>
         </KeyboardAvoidingView>
     );
-} ''
+}

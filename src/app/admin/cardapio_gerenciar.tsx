@@ -1,12 +1,12 @@
-// app/(admin)/cardapio-gerenciar.tsx
-import React, { useCallback, useEffect, useState, useMemo } from 'react'; // Adicione useMemo
-import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, Switch } from 'react-native'; // Adicione Switch
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import axios from 'axios';
 import AppHeader from '../../components/AppHeader';
 import MenuItemCardAdmin from '../../components/MenuItemCardAdmin';
 import { useUser } from '../../contexts/UserContext';
+import * as Animatable from 'react-native-animatable';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -37,9 +37,7 @@ export default function CardapioGerenciar() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [searchTerm, setSearchTerm] = useState(''); // NOVO: Estado para o termo de busca
-
-    // --- Funções de Fetch e Gerenciamento ---
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchMenuItems = useCallback(async () => {
         if (!user || user.role !== 'admin') {
@@ -95,7 +93,7 @@ export default function CardapioGerenciar() {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
             return;
         }
-        const precoNormalizado = preco.replace(',', '.'); 
+        const precoNormalizado = preco.replace(',', '.');
         if (isNaN(parseFloat(precoNormalizado))) {
             Alert.alert("Erro", "Preço deve ser um número válido.");
             return;
@@ -166,81 +164,102 @@ export default function CardapioGerenciar() {
         }
     }, [fetchMenuItems]);
 
-    // NOVO: Lógica de filtro para os itens do cardápio
     const filteredMenuItems = useMemo(() => {
         if (!searchTerm) {
             return menuItems;
         }
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        return menuItems.filter(item => 
+        return menuItems.filter(item =>
             item.nome.toLowerCase().includes(lowerCaseSearchTerm) ||
             item.categoria.toLowerCase().includes(lowerCaseSearchTerm) ||
             item.descricao.toLowerCase().includes(lowerCaseSearchTerm) ||
-            item._id.toLowerCase().includes(lowerCaseSearchTerm.slice(-6)) // Para ID
+            item._id.toLowerCase().includes(lowerCaseSearchTerm.slice(-6))
         );
     }, [menuItems, searchTerm]);
 
-    // --- Renderização Principal ---
     return (
         <View style={tw`flex-1 bg-[#f7f7f7]`}>
-            <AppHeader title="Gerenciar Cardápio" />
+            <Animatable.View animation="fadeInDown" duration={800} delay={100}>
+                <AppHeader title="Gerenciar Cardápio" />
+            </Animatable.View>
 
-            {/* NOVO: Campo de busca */}
-            <View style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
+            <Animatable.View animation="fadeInLeft" duration={800} delay={300} style={tw`flex-row items-center border border-gray-300 rounded-lg mx-6 mt-4 mb-4 bg-white px-3`}>
                 <Ionicons name="search" size={20} color={tw.color('gray-500')!} style={tw`mr-1`} />
                 <TextInput
-                    style={tw`flex-1 p-2 text-gray-800`} // Ajustado padding para não ser duplo com o container
+                    style={tw`flex-1 p-2 text-gray-800`}
                     placeholder="Buscar por nome, categoria, descrição ou ID..."
                     placeholderTextColor={tw.color('gray-500')!}
+                    autoCorrect={true}
+                    autoComplete="off"
+                    spellCheck={true}
                     value={searchTerm}
                     onChangeText={setSearchTerm}
                 />
-            </View>
+            </Animatable.View>
 
-            <View style={tw`flex-1 px-4`}> {/* Removido pt-4 */}
+            <Animatable.View animation="fadeIn" duration={1000} delay={500} style={tw`flex-1 px-4`}>
                 {loading ? (
-                    <View style={tw`flex-1 justify-center items-center`}>
+                    <Animatable.View
+                        animation="pulse"
+                        iterationCount="infinite"
+                        duration={1500}
+                        style={tw`flex-1 justify-center items-center`}
+                    >
                         <ActivityIndicator size="large" color="#005B7F" />
                         <Text style={tw`mt-4 text-lg text-gray-700`}>Carregando cardápio...</Text>
-                    </View>
+                    </Animatable.View>
                 ) : error ? (
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}>
+                    <Animatable.View
+                        animation="shake"
+                        duration={800}
+                        style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
+                    >
                         <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
-                    </View>
-                ) : filteredMenuItems.length === 0 ? ( // Usa filteredMenuItems aqui
-                    <View style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}>
+                    </Animatable.View>
+                ) : filteredMenuItems.length === 0 ? (
+                    <Animatable.View
+                        animation="bounceIn"
+                        duration={1000}
+                        style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
+                    >
                         <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum item encontrado para esta busca. 🔎" : "Nenhum item no cardápio. 😔"}</Text>
-                    </View>
+                    </Animatable.View>
                 ) : (
                     <FlatList
-                        data={filteredMenuItems} // Usa filteredMenuItems aqui
+                        data={filteredMenuItems}
                         keyExtractor={(item) => item._id}
-                        renderItem={({ item }) => (
-                            <MenuItemCardAdmin
-                                item={item}
-                                onEdit={handleOpenModal}
-                                onDelete={handleDeleteItem}
-                                onToggleAvailability={handleToggleAvailability}
-                            />
+                        renderItem={({ item, index }) => (
+                            <Animatable.View
+                                animation="fadeInRight"
+                                duration={600}
+                                delay={index * 100}
+                            >
+                                <MenuItemCardAdmin
+                                    item={item}
+                                    onEdit={handleOpenModal}
+                                    onDelete={handleDeleteItem}
+                                    onToggleAvailability={handleToggleAvailability}
+                                />
+                            </Animatable.View>
                         )}
                         contentContainerStyle={tw`pb-4`}
                         showsVerticalScrollIndicator={false}
                     />
                 )}
-            </View>
+            </Animatable.View>
 
-            {/* Botão Flutuante para Adicionar Item */}
-            <TouchableOpacity
-                onPress={() => handleOpenModal()}
-                style={tw`absolute bottom-6 right-6 bg-[#005B7F] w-14 h-14 rounded-full justify-center items-center shadow-lg`}
-            >
-                <Ionicons name="add" size={30} color="#fff" />
-            </TouchableOpacity>
+            <Animatable.View animation="bounceIn" duration={1000} delay={700}>
+                <TouchableOpacity
+                    onPress={() => handleOpenModal()}
+                    style={tw`absolute bottom-6 right-6 bg-[#005B7F] w-14 h-14 rounded-full justify-center items-center shadow-lg`}
+                >
+                    <Ionicons name="add" size={30} color="#fff" />
+                </TouchableOpacity>
+            </Animatable.View>
 
-            {/* Modal de Adição/Edição de Item */}
             <Modal visible={modalVisible} animationType="fade" transparent onRequestClose={handleCloseModal}>
                 <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
-                    <View style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
+                    <Animatable.View animation="zoomIn" duration={500} style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
                         <Text style={tw`text-xl font-bold mb-4 text-center text-[#005B7F]`}>
                             {isEditing ? 'Editar Item do Cardápio' : 'Adicionar Novo Item'}
                         </Text>
@@ -248,6 +267,9 @@ export default function CardapioGerenciar() {
                         <TextInput
                             placeholder="Nome do Item"
                             placeholderTextColor={tw.color('gray-500')!}
+                            autoCorrect={true}
+                            autoComplete="off"
+                            spellCheck={true}
                             value={nome}
                             onChangeText={setNome}
                             style={tw`border border-gray-300 rounded p-3 mb-3 text-gray-800`}
@@ -255,6 +277,9 @@ export default function CardapioGerenciar() {
                         <TextInput
                             placeholder="Preço (ex: 12.50)"
                             placeholderTextColor={tw.color('gray-500')!}
+                            autoCorrect={true}
+                            autoComplete="off"
+                            spellCheck={true}
                             value={preco}
                             onChangeText={setPreco}
                             keyboardType="numeric"
@@ -263,6 +288,9 @@ export default function CardapioGerenciar() {
                         <TextInput
                             placeholder="Categoria (ex: Lanches, Bebidas)"
                             placeholderTextColor={tw.color('gray-500')!}
+                            autoCorrect={true}
+                            autoComplete="off"
+                            spellCheck={true}
                             value={categoria}
                             onChangeText={setCategoria}
                             style={tw`border border-gray-300 rounded p-3 mb-3 text-gray-800`}
@@ -270,13 +298,16 @@ export default function CardapioGerenciar() {
                         <TextInput
                             placeholder="Descrição (opcional)"
                             placeholderTextColor={tw.color('gray-500')!}
+                            autoCorrect={true}
+                            autoComplete="off"
+                            spellCheck={true}
                             value={descricao}
                             onChangeText={setDescricao}
                             multiline
                             numberOfLines={3}
                             style={tw`border border-gray-300 rounded p-3 mb-4 text-gray-800 h-24`}
                         />
-                        
+
                         <View style={tw`flex-row justify-between items-center mb-6`}>
                             <Text style={tw`text-base text-gray-700`}>Disponível:</Text>
                             <Switch
@@ -307,7 +338,7 @@ export default function CardapioGerenciar() {
                                 )}
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    </Animatable.View>
                 </View>
             </Modal>
         </View>

@@ -9,6 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import axios from "axios";
 import tw from "twrnc";
+import * as Animatable from 'react-native-animatable';
 
 import AuthForm from "../components/AuthForm";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
@@ -57,33 +58,41 @@ export default function Cadastro() {
                 style={tw`overflow-visible`}
             >
                 <View style={tw`flex-1 bg-[#f7f7f7] relative`}>
-                    <BackgroundPoliedros />
+                    <Animatable.View animation="fadeIn" duration={1200} style={tw`absolute inset-0`}>
+                        <BackgroundPoliedros />
+                    </Animatable.View>
 
-                    <BackButton
-                        onPress={handleGoBack}
-                        color="#2a52be"
-                        style={tw`top-12`}
-                    />
+                    <Animatable.View animation="fadeInLeft" duration={800} delay={200}>
+                        <BackButton
+                            onPress={handleGoBack}
+                            color="#2a52be"
+                            style={tw`top-12`}
+                        />
+                    </Animatable.View>
 
                     <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-                        <AuthHeader
-                            title="Crie sua conta"
-                            subtitle="Cadastre-se para acessar o restaurante"
-                        />
+                        <Animatable.View animation="fadeInDown" duration={800} delay={400}>
+                            <AuthHeader
+                                title="Crie sua conta"
+                                subtitle="Cadastre-se para acessar o restaurante"
+                            />
+                        </Animatable.View>
 
-                        <View style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
+                        <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
                             <AuthForm
                                 isCadastro={true}
                                 onSubmit={handleCadastro}
                                 buttonText="Cadastrar"
                             />
-                        </View>
+                        </Animatable.View>
 
-                        <AuthLink
-                            question="Já tem uma conta?"
-                            linkText="Faça login"
-                            onPress={() => router.replace("/")}
-                        />
+                        <Animatable.View animation="fadeInUp" duration={800} delay={800}>
+                            <AuthLink
+                                question="Já tem uma conta?"
+                                linkText="Faça login"
+                                onPress={() => router.replace("/")}
+                            />
+                        </Animatable.View>
                     </View>
                 </View>
             </ScrollView>

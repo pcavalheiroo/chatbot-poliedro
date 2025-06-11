@@ -1,17 +1,18 @@
-import { View, Alert, TouchableOpacity } from "react-native";
-import React, { useCallback } from 'react'; 
+import { View, Alert } from "react-native";
+import React, { useCallback } from "react";
 import { useRouter } from "expo-router";
 import BackButton from "../components/BackButton";
 import Header from "../components/Header";
 import BackgroundPoliedros from "../components/BackgroundPoliedros";
 import HomeOptionsGrid from "../components/HomeOptionsGrid";
 import { useUser } from "../contexts/UserContext";
-import { Ionicons } from "@expo/vector-icons";
-import tw from 'twrnc';
+import LogoutButton from "../components/LogoutButton";
+import tw from "twrnc";
+import * as Animatable from "react-native-animatable";
 
 export default function Index() {
   const router = useRouter();
-  const { user, setUser } = useUser(); // Acessa setUser para logout
+  const { setUser } = useUser();
 
   const handleLogout = useCallback(() => {
     Alert.alert(
@@ -22,8 +23,8 @@ export default function Index() {
         {
           text: "Sair",
           onPress: () => {
-            setUser(null); // Limpa o usuário do contexto e do AsyncStorage
-            router.replace("/"); // Volta para a tela de login (raiz)
+            setUser(null);
+            router.replace("/");
           },
         },
       ]
@@ -31,23 +32,20 @@ export default function Index() {
   }, [setUser, router]);
 
   return (
-    <View style={{ flex: 1 }} className="bg-[#f7f7f7] px-12 relative">
-
+    <View style={tw`flex-1 bg-[#f7f7f7] relative`}>
       <BackgroundPoliedros />
-
       <BackButton onPress={() => router.replace("/")} />
+      <LogoutButton onPress={handleLogout} />
 
-      <TouchableOpacity
-        onPress={handleLogout}
-        style={tw`absolute top-12 right-6 p-2.5 rounded-full bg-transparent`}
-      >
-        <Ionicons name="log-out-outline" size={25} color="#2a52be" />
-      </TouchableOpacity>
+      <View style={tw`flex-1 px-12`}>
+        <Animatable.View animation="fadeInDown" duration={800} delay={300}>
+          <Header />
+        </Animatable.View>
 
-      <Header />
-
-      <HomeOptionsGrid />
-
+        <Animatable.View animation="fadeInUp" duration={800} delay={500}>
+          <HomeOptionsGrid />
+        </Animatable.View>
+      </View>
     </View>
   );
 }
