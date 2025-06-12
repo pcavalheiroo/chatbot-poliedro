@@ -18,16 +18,17 @@ Interface mobile e web de um sistema inteligente de pedidos para cantinas e lanc
 
 ```
 chatbot-poliedro/
-├── components/           # Componentes reutilizáveis (Header, Botões, Background)
-├── contexts/             # Contexto global do usuário
-├── assets/               # Imagens e logos
-├── app/                  # Páginas e rotas (Expo Router)
-│   ├── index.tsx         # Página inicial
-│   └── outras rotas/
-├── utils/                # Funções auxiliares (ex: formatação)
-├── types/                # Tipagens e interfaces
-├── package.json          # Dependências e scripts
-└── ...
+├──src/
+    ├── components/           # Componentes reutilizáveis (Header, Botões, Background)
+    ├── contexts/             # Contexto global do usuário
+    ├── assets/               # Imagens e logos
+    ├── app/                  # Páginas e rotas (Expo Router)
+    │   ├── index.tsx         # Página inicial
+    │   └── outras rotas/
+    ├── utils/                # Funções auxiliares (ex: formatação)
+    ├── types/                # Tipagens e interfaces
+    ├── package.json          # Dependências e scripts
+    └── ...
 ```
 
 ## 🚀 Funcionalidades
