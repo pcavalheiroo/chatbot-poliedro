@@ -3,7 +3,6 @@ import { Stack } from "expo-router";
 import '../styles/global.css'
 import { ActivityIndicator, View, Text } from 'react-native';
 
-// Componente Wrapper para a lógica de carregamento
 function RootLayoutContent() {
   const { isLoadingUser } = useUser();
 
@@ -22,7 +21,7 @@ function RootLayoutContent() {
       <Stack.Screen name="cardapio" options={{ title: 'Cardápio' }} />
       <Stack.Screen name="chatbot" options={{ title: 'Chatbot' }} />
       <Stack.Screen name="pedidos" options={{ title: 'Pedidos' }} />
-      <Stack.Screen name="informaes" options={{ title: 'Info' }} />
+      <Stack.Screen name="informacoes" options={{ title: 'Info' }} />
     </Stack>
   );
 }
