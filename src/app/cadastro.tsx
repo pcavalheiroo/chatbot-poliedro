@@ -1,10 +1,12 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useEffect } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     View,
-    Alert
+    Alert,
+    Dimensions,
+    Keyboard
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -18,9 +20,11 @@ import AuthHeader from "../components/AuthHeader";
 import AuthLink from "../components/AuthLink";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const { width } = Dimensions.get('window');
 
 export default function Cadastro() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const handleGoBack = useCallback(() => {
         router.back();
@@ -46,6 +50,28 @@ export default function Cadastro() {
         }
     }, [router]);
 
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener(
+            'keyboardDidShow',
+            () => {
+                if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true });
+                }
+            }
+        );
+        const keyboardDidHideListener = Keyboard.addListener(
+            'keyboardDidHide',
+            () => { }
+        );
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
+    const isWeb = width > 768;
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -53,6 +79,7 @@ export default function Cadastro() {
             style={tw`flex-1 bg-[#f0f4ff]`}
         >
             <ScrollView
+                ref={scrollViewRef}
                 contentContainerStyle={tw`flex-grow`}
                 keyboardShouldPersistTaps="handled"
                 style={tw`overflow-visible`}
@@ -66,19 +93,19 @@ export default function Cadastro() {
                         <BackButton
                             onPress={handleGoBack}
                             color="#2a52be"
-                            style={tw`top-12`}
+                            style={tw`top-12 ${isWeb ? 'left-8' : 'left-6'}`}
                         />
                     </Animatable.View>
 
-                    <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-                        <Animatable.View animation="fadeInDown" duration={800} delay={400}>
+                    <View style={tw`flex-1 items-center justify-center ${isWeb ? 'px-40' : 'px-8'} py-12`}>
+                        <Animatable.View animation="fadeInDown" duration={800} delay={400} style={tw`${isWeb ? 'w-3/4 max-w-md' : 'w-full'}`}>
                             <AuthHeader
                                 title="Crie sua conta"
                                 subtitle="Cadastre-se para acessar o restaurante"
                             />
                         </Animatable.View>
 
-                        <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
+                        <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4 ${isWeb ? 'max-w-md' : ''}`}>
                             <AuthForm
                                 isCadastro={true}
                                 onSubmit={handleCadastro}

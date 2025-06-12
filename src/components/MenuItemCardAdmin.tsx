@@ -3,9 +3,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
-import axios from 'axios';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface MenuItemAdminProps {
     item: {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput } from 'react-native';
+import { ScrollView, View, Text, FlatList, ActivityIndicator, Alert, TextInput, useWindowDimensions, Platform, Dimensions } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import axios from 'axios';
@@ -27,16 +27,24 @@ interface PedidoAdmin {
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+const screenWidth = Dimensions.get('window').width;
+const isDesktop = screenWidth >= 1024;
+
 export default function PedidosGerenciar() {
     const { user } = useUser();
     const [pedidos, setPedidos] = useState<PedidoAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const { width } = useWindowDimensions();
+
+    const numColumns = Platform.OS === 'web' && width >= 1024 ? 2 : 1;
+    const cardMargin = 8;
+    const cardWidth = (width - (numColumns + 1) * cardMargin * 2) / numColumns;
 
     const fetchPedidos = useCallback(async () => {
         if (!user || user.role !== 'admin') {
-            setError("Acesso negado. Apenas administradores podem gerenciar pedidos.");
+            setError("Apenas administradores podem gerenciar pedidos.");
             setLoading(false);
             return;
         }
@@ -46,7 +54,7 @@ export default function PedidosGerenciar() {
             const response = await axios.get<PedidoAdmin[]>(`${API_BASE_URL}/admin/pedidos/todos`);
             setPedidos(response.data);
         } catch (err) {
-            console.error("Erro ao buscar todos os pedidos:", err);
+            console.error("Erro ao buscar pedidos:", err);
             setError("Não foi possível carregar os pedidos.");
         } finally {
             setLoading(false);
@@ -95,16 +103,14 @@ export default function PedidosGerenciar() {
     }, [fetchPedidos]);
 
     const filteredPedidos = useMemo(() => {
-        if (!searchTerm) {
-            return pedidos;
-        }
-        const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        return pedidos.filter(pedidoItem =>
-            (pedidoItem.usuario_info?.nome?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (pedidoItem.usuario_info?.id?.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) ||
-            (pedidoItem.status.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (pedidoItem._id.toLowerCase().includes(lowerCaseSearchTerm.slice(-8))) ||
-            pedidoItem.itens.some(item => item.nome.toLowerCase().includes(lowerCaseSearchTerm))
+        if (!searchTerm) return pedidos;
+        const lower = searchTerm.toLowerCase();
+        return pedidos.filter(p =>
+            p.usuario_info?.nome?.toLowerCase().includes(lower) ||
+            p.usuario_info?.id?.toLowerCase().includes(lower.slice(-8)) ||
+            p.status.toLowerCase().includes(lower) ||
+            p._id.toLowerCase().includes(lower.slice(-8)) ||
+            p.itens.some(item => item.nome.toLowerCase().includes(lower))
         );
     }, [pedidos, searchTerm]);
 
@@ -118,9 +124,9 @@ export default function PedidosGerenciar() {
                 <Ionicons name="search" size={20} color={tw.color('gray-500')!} style={tw`mr-1`} />
                 <TextInput
                     style={tw`flex-1 p-2 text-gray-800`}
-                    autoCorrect={true}
+                    autoCorrect
                     autoComplete="off"
-                    spellCheck={true}
+                    spellCheck
                     placeholder="Buscar por cliente, status, item ou ID do pedido..."
                     placeholderTextColor={tw.color('gray-500')!}
                     value={searchTerm}
@@ -130,51 +136,38 @@ export default function PedidosGerenciar() {
 
             <Animatable.View animation="fadeIn" duration={1000} delay={500} style={tw`flex-1 px-4`}>
                 {loading ? (
-                    <Animatable.View
-                        animation="pulse"
-                        iterationCount="infinite"
-                        duration={1500}
-                        style={tw`flex-1 justify-center items-center`}
-                    >
+                    <Animatable.View animation="pulse" iterationCount="infinite" duration={1500} style={tw`flex-1 justify-center items-center`}>
                         <ActivityIndicator size="large" color="#005B7F" />
                         <Text style={tw`mt-4 text-lg text-gray-700`}>Carregando pedidos...</Text>
                     </Animatable.View>
                 ) : error ? (
-                    <Animatable.View
-                        animation="shake"
-                        duration={800}
-                        style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
-                    >
+                    <Animatable.View animation="shake" duration={800} style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}>
                         <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
                     </Animatable.View>
                 ) : filteredPedidos.length === 0 ? (
-                    <Animatable.View
-                        animation="bounceIn"
-                        duration={1000}
-                        style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
-                    >
+                    <Animatable.View animation="bounceIn" duration={1000} style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}>
                         <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum pedido encontrado para esta busca. 🔎" : "Nenhum pedido ativo. 😔"}</Text>
                     </Animatable.View>
                 ) : (
-                    <FlatList
-                        data={filteredPedidos}
-                        keyExtractor={(item) => item._id}
-                        renderItem={({ item, index }) => (
-                            <Animatable.View
-                                animation="fadeInRight"
-                                duration={600}
-                                delay={index * 100}
-                            >
-                                <PedidoAdminCard
-                                    pedido={item}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onDeletePedido={handleDeletePedido}
-                                />
-                            </Animatable.View>
-                        )}
-                        contentContainerStyle={tw`pb-4`}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <ScrollView contentContainerStyle={tw`pb-4`} showsVerticalScrollIndicator={false}>
+                        <View style={[tw`flex-row flex-wrap justify-start`, { gap: 12 }]}>
+                            {filteredPedidos.map((item, index) => (
+                                <Animatable.View
+                                    key={item._id}
+                                    animation="fadeInRight"
+                                    duration={600}
+                                    delay={index * 100}
+                                    style={isDesktop ? { width: '32%' } : { width: '100%' }}
+                                >
+                                    <PedidoAdminCard
+                                        pedido={item}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onDeletePedido={handleDeletePedido}
+                                    />
+                                </Animatable.View>
+                            ))}
+                        </View>
+                    </ScrollView>
                 )}
             </Animatable.View>
         </View>

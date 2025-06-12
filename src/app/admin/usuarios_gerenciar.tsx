@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import axios from 'axios';
@@ -21,7 +21,6 @@ export default function UsuariosGerenciar() {
     const [users, setUsers] = useState<UserAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     const [modalVisible, setModalVisible] = useState(false);
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -39,8 +38,7 @@ export default function UsuariosGerenciar() {
             setError(null);
             const response = await axios.get<UserAdmin[]>(`${API_BASE_URL}/admin/usuarios/todos`);
             setUsers(response.data);
-        } catch (err) {
-            console.error("Erro ao buscar usuários:", err);
+        } catch {
             setError("Não foi possível carregar os usuários.");
         } finally {
             setLoading(false);
@@ -74,7 +72,6 @@ export default function UsuariosGerenciar() {
             handleCloseModal();
             fetchUsers();
         } catch (err: any) {
-            console.error("Erro ao adicionar usuário:", err);
             const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao adicionar usuário.";
             Alert.alert("Erro", msg);
         } finally {
@@ -83,39 +80,45 @@ export default function UsuariosGerenciar() {
     }, [newEmail, newPassword, fetchUsers, handleCloseModal]);
 
     const handleDeleteUser = useCallback(async (userId: string, userEmail: string) => {
-        Alert.alert(
-            "Confirmar Exclusão",
-            `Tem certeza que deseja excluir o usuário ${userEmail}?`,
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Excluir",
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await axios.delete(`${API_BASE_URL}/admin/usuarios/${userId}`);
-                            Alert.alert("Sucesso", "Usuário excluído!");
-                            fetchUsers();
-                        } catch (err: any) {
-                            console.error("Erro ao excluir usuário:", err);
-                            const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir usuário.";
-                            Alert.alert("Erro", msg);
-                        }
+        if (Platform.OS === 'web') {
+            if (!window.confirm(`Deseja excluir o usuário ${userEmail}?`)) return;
+            try {
+                await axios.delete(`${API_BASE_URL}/admin/usuarios/${userId}`);
+                alert("Usuário excluído!");
+                fetchUsers();
+            } catch (err: any) {
+                const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir usuário.";
+                alert(msg);
+            }
+        } else {
+            Alert.alert(
+                "Confirmar Exclusão",
+                `Deseja excluir o usuário ${userEmail}?`,
+                [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                        text: "Excluir",
+                        style: 'destructive',
+                        onPress: async () => {
+                            try {
+                                await axios.delete(`${API_BASE_URL}/admin/usuarios/${userId}`);
+                                Alert.alert("Sucesso", "Usuário excluído!");
+                                fetchUsers();
+                            } catch (err: any) {
+                                const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir usuário.";
+                                Alert.alert("Erro", msg);
+                            }
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     }, [fetchUsers]);
 
     const filteredUsers = useMemo(() => {
-        if (!searchTerm) {
-            return users;
-        }
-        const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        return users.filter(userItem =>
-            userItem.email.toLowerCase().includes(lowerCaseSearchTerm) ||
-            userItem._id.toLowerCase().includes(lowerCaseSearchTerm)
-        );
+        if (!searchTerm) return users;
+        const term = searchTerm.toLowerCase();
+        return users.filter(u => u.email.toLowerCase().includes(term) || u._id.toLowerCase().includes(term));
     }, [users, searchTerm]);
 
     const renderUserItem = useCallback(({ item, index }: { item: UserAdmin; index: number }) => (
@@ -123,7 +126,10 @@ export default function UsuariosGerenciar() {
             animation="fadeInRight"
             duration={600}
             delay={index * 100}
-            style={tw`bg-white p-4 m-2 rounded-lg shadow-md flex-row justify-between items-center`}
+            style={[
+                tw`bg-white p-4 rounded-lg shadow-md flex-row justify-between items-center`,
+                Platform.OS === 'web' ? { marginVertical: 8, marginHorizontal: '10%', maxWidth: 800, alignSelf: 'center' } : tw`m-2`
+            ]}
         >
             <View style={tw`flex-1`}>
                 <Text style={tw`text-lg font-bold text-[#005B7F]`}>{item.email}</Text>
@@ -145,9 +151,9 @@ export default function UsuariosGerenciar() {
                 <Ionicons name="search" size={20} color={tw.color('gray-500')!} style={tw`mr-1`} />
                 <TextInput
                     style={tw`flex-1 p-2 text-gray-800`}
-                    autoCorrect={true}
+                    autoCorrect
                     autoComplete="off"
-                    spellCheck={true}
+                    spellCheck
                     placeholder="Buscar por email ou ID do usuário..."
                     placeholderTextColor={tw.color('gray-500')!}
                     value={searchTerm}
@@ -157,30 +163,17 @@ export default function UsuariosGerenciar() {
 
             <Animatable.View animation="fadeIn" duration={1000} delay={500} style={tw`flex-1 px-4`}>
                 {loading ? (
-                    <Animatable.View
-                        animation="pulse"
-                        iterationCount="infinite"
-                        duration={1500}
-                        style={tw`flex-1 justify-center items-center`}
-                    >
+                    <Animatable.View animation="pulse" iterationCount="infinite" duration={1500} style={tw`flex-1 justify-center items-center`}>
                         <ActivityIndicator size="large" color="#005B7F" />
                         <Text style={tw`mt-4 text-lg text-gray-700`}>Carregando usuários...</Text>
                     </Animatable.View>
                 ) : error ? (
-                    <Animatable.View
-                        animation="shake"
-                        duration={800}
-                        style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}
-                    >
+                    <Animatable.View animation="shake" duration={800} style={tw`flex-1 justify-center items-center p-4 bg-red-100 rounded-lg`}>
                         <Text style={tw`text-red-700 text-base text-center`}>{error}</Text>
                     </Animatable.View>
                 ) : filteredUsers.length === 0 ? (
-                    <Animatable.View
-                        animation="bounceIn"
-                        duration={1000}
-                        style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}
-                    >
-                        <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum usuário encontrado para esta busca. 🔎" : "Nenhum usuário cadastrado. 😔"}</Text>
+                    <Animatable.View animation="bounceIn" duration={1000} style={tw`flex-1 justify-center items-center p-4 bg-yellow-100 rounded-lg`}>
+                        <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum usuário encontrado. 🔎" : "Nenhum usuário cadastrado. 😔"}</Text>
                     </Animatable.View>
                 ) : (
                     <FlatList
@@ -202,14 +195,16 @@ export default function UsuariosGerenciar() {
                 </TouchableOpacity>
             </Animatable.View>
 
-            <Modal
-                visible={modalVisible}
-                animationType="fade"
-                transparent
-                onRequestClose={handleCloseModal}
-            >
+            <Modal visible={modalVisible} animationType="fade" transparent onRequestClose={handleCloseModal}>
                 <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
-                    <Animatable.View animation="zoomIn" duration={500} style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
+                    <Animatable.View
+                        animation="zoomIn"
+                        duration={500}
+                        style={[
+                            tw`bg-white p-6 rounded-lg shadow-xl`,
+                            Platform.OS === 'web' ? { width: '35%', minWidth: 340 } : tw`w-11/12`
+                        ]}
+                    >
                         <Text style={tw`text-xl font-bold mb-4 text-center text-[#005B7F]`}>Adicionar Usuário</Text>
                         <TextInput
                             placeholder="Email do novo usuário"
@@ -229,22 +224,11 @@ export default function UsuariosGerenciar() {
                             style={tw`border border-gray-300 rounded p-3 mb-6 text-gray-800`}
                         />
                         <View style={tw`flex-row justify-between`}>
-                            <TouchableOpacity
-                                onPress={handleCloseModal}
-                                style={tw`bg-gray-300 px-5 py-3 rounded-lg`}
-                            >
+                            <TouchableOpacity onPress={handleCloseModal} style={tw`bg-gray-300 px-5 py-3 rounded-lg`}>
                                 <Text style={tw`text-gray-800 font-semibold`}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={handleAddUser}
-                                style={tw`bg-[#FAA41F] px-5 py-3 rounded-lg ${isAddingUser ? 'opacity-50' : ''}`}
-                                disabled={isAddingUser}
-                            >
-                                {isAddingUser ? (
-                                    <ActivityIndicator color="white" />
-                                ) : (
-                                    <Text style={tw`text-white font-semibold`}>Adicionar</Text>
-                                )}
+                            <TouchableOpacity onPress={handleAddUser} style={tw`bg-[#FAA41F] px-5 py-3 rounded-lg ${isAddingUser ? 'opacity-50' : ''}`} disabled={isAddingUser}>
+                                {isAddingUser ? <ActivityIndicator color="white" /> : <Text style={tw`text-white font-semibold`}>Adicionar</Text>}
                             </TouchableOpacity>
                         </View>
                     </Animatable.View>

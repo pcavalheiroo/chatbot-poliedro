@@ -5,7 +5,8 @@ import {
   ScrollView,
   View,
   Alert,
-  Keyboard
+  Keyboard,
+  Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
@@ -19,6 +20,7 @@ import BackButton from '../../components/BackButton';
 import { useUser } from '../../contexts/UserContext';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const { width } = Dimensions.get('window');
 
 const AUTH_FORM_HEIGHT_ADMIN_LOGIN = 250;
 const KEYBOARD_VERTICAL_OFFSET_ADMIN = Platform.OS === "ios" ? -AUTH_FORM_HEIGHT_ADMIN_LOGIN / 2 : 0;
@@ -80,6 +82,8 @@ export default function AdminLogin() {
     };
   }, []);
 
+  const isWeb = width > 768;
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -99,19 +103,19 @@ export default function AdminLogin() {
             <BackButton
               onPress={handleGoBack}
               color="#e65100"
-              style={tw`top-12`}
+              style={tw`top-12 ${isWeb ? 'left-8' : 'left-6'}`}
             />
           </Animatable.View>
 
-          <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-            <Animatable.View animation="fadeInDown" duration={800} delay={400}>
+          <View style={tw`flex-1 items-center justify-center ${isWeb ? 'px-40' : 'px-8'} py-12`}>
+            <Animatable.View animation="fadeInDown" duration={800} delay={400} style={tw`${isWeb ? 'w-3/4 max-w-md' : 'w-full'}`}>
               <AuthHeader
                 title="Acesso do Restaurante"
                 subtitle="Faça login como administrador para gerenciar"
               />
             </Animatable.View>
 
-            <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4`}>
+            <Animatable.View animation="zoomIn" duration={800} delay={600} style={tw`w-full bg-white rounded-2xl p-6 shadow-md mb-4 ${isWeb ? 'max-w-md' : ''}`}>
               <AuthForm
                 isCadastro={false}
                 onSubmit={handleAdminLogin}

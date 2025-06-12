@@ -7,7 +7,8 @@ import {
     Alert,
     Text,
     TouchableOpacity,
-    Keyboard
+    Keyboard,
+    Dimensions
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -21,6 +22,7 @@ import { useUser } from "../contexts/UserContext";
 import * as Animatable from 'react-native-animatable';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const { width } = Dimensions.get('window');
 
 export default function Login() {
     const router = useRouter();
@@ -85,6 +87,7 @@ export default function Login() {
         };
     }, []);
 
+    const isWeb = width > 768;
 
     return (
         <KeyboardAvoidingView
@@ -102,16 +105,15 @@ export default function Login() {
                         <BackgroundPoliedros />
                     </Animatable.View>
 
-                    <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
-                        <Animatable.View animation="fadeInDown" duration={800}>
+                    <View style={tw`flex-1 items-center justify-center ${isWeb ? 'px-40' : 'px-8'} py-12`}>
+                        <Animatable.View animation="fadeInDown" duration={800} style={tw`${isWeb ? 'w-3/4 max-w-md' : 'w-full'}`}>
                             <AuthHeader
                                 title="Bem-vindo ao PoliChat"
                                 subtitle="Faça login para acessar o restaurante"
                             />
                         </Animatable.View>
 
-
-                        <View style={tw`w-full mb-4`}>
+                        <View style={tw`w-full mb-4 ${isWeb ? 'max-w-md' : ''}`}>
                             <Animatable.View
                                 animation="fadeInUpBig"
                                 duration={800}
@@ -126,7 +128,6 @@ export default function Login() {
                             </Animatable.View>
                         </View>
 
-
                         <Animatable.View animation="fadeInLeft" duration={600} delay={700}>
                             <AuthLink
                                 question="É novo por aqui?"
@@ -134,7 +135,6 @@ export default function Login() {
                                 onPress={handleGoToCadastro}
                             />
                         </Animatable.View>
-
 
                         <Animatable.View animation="fadeInRight" duration={600} delay={800}>
                             <View style={tw`flex-row mb-8`}>
@@ -146,8 +146,6 @@ export default function Login() {
                                 </TouchableOpacity>
                             </View>
                         </Animatable.View>
-
-
                     </View>
                 </View>
             </ScrollView>

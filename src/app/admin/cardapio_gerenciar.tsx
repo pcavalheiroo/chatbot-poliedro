@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
+import { Dimensions, Platform, ScrollView, View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import tw from 'twrnc';
 import axios from 'axios';
@@ -38,6 +38,10 @@ export default function CardapioGerenciar() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    const screenWidth = Dimensions.get('window').width;
+    const isDesktop = Platform.OS === 'web' && screenWidth >= 1024;
+
 
     const fetchMenuItems = useCallback(async () => {
         if (!user || user.role !== 'admin') {
@@ -128,29 +132,45 @@ export default function CardapioGerenciar() {
     }, [nome, preco, categoria, descricao, disponibilidade, isEditing, currentEditItem, handleCloseModal, fetchMenuItems]);
 
     const handleDeleteItem = useCallback(async (itemId: string, itemName: string) => {
-        Alert.alert(
-            "Excluir Item",
-            `Tem certeza que deseja excluir o item "${itemName}"?`,
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Excluir",
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await axios.delete(`${API_BASE_URL}/admin/cardapio/${itemId}`);
-                            Alert.alert("Sucesso", "Item excluído!");
-                            fetchMenuItems();
-                        } catch (err: any) {
-                            console.error("Erro ao excluir item:", err);
-                            const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir item.";
-                            Alert.alert("Erro", msg);
-                        }
+        if (Platform.OS === 'web') {
+            const confirm = window.confirm(`Tem certeza que deseja excluir o item "${itemName}"?`);
+            if (!confirm) return;
+
+            try {
+                await axios.delete(`${API_BASE_URL}/admin/cardapio/${itemId}`);
+                alert("Item excluído!");
+                fetchMenuItems();
+            } catch (err: any) {
+                console.error("Erro ao excluir item:", err);
+                const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir item.";
+                alert(msg);
+            }
+        } else {
+            Alert.alert(
+                "Excluir Item",
+                `Tem certeza que deseja excluir o item "${itemName}"?`,
+                [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                        text: "Excluir",
+                        style: 'destructive',
+                        onPress: async () => {
+                            try {
+                                await axios.delete(`${API_BASE_URL}/admin/cardapio/${itemId}`);
+                                Alert.alert("Sucesso", "Item excluído!");
+                                fetchMenuItems();
+                            } catch (err: any) {
+                                console.error("Erro ao excluir item:", err);
+                                const msg = axios.isAxiosError(err) && err.response?.data?.erro || "Falha ao excluir item.";
+                                Alert.alert("Erro", msg);
+                            }
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     }, [fetchMenuItems]);
+
 
     const handleToggleAvailability = useCallback(async (itemId: string, currentAvailability: boolean) => {
         try {
@@ -225,26 +245,26 @@ export default function CardapioGerenciar() {
                         <Text style={tw`text-yellow-700 text-base text-center`}>{searchTerm ? "Nenhum item encontrado para esta busca. 🔎" : "Nenhum item no cardápio. 😔"}</Text>
                     </Animatable.View>
                 ) : (
-                    <FlatList
-                        data={filteredMenuItems}
-                        keyExtractor={(item) => item._id}
-                        renderItem={({ item, index }) => (
-                            <Animatable.View
-                                animation="fadeInRight"
-                                duration={600}
-                                delay={index * 100}
-                            >
-                                <MenuItemCardAdmin
-                                    item={item}
-                                    onEdit={handleOpenModal}
-                                    onDelete={handleDeleteItem}
-                                    onToggleAvailability={handleToggleAvailability}
-                                />
-                            </Animatable.View>
-                        )}
-                        contentContainerStyle={tw`pb-4`}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <ScrollView contentContainerStyle={tw`pb-4`} showsVerticalScrollIndicator={false}>
+                        <View style={[tw`flex-row flex-wrap justify-start`, { gap: 12 }]}>
+                            {filteredMenuItems.map((item, index) => (
+                                <Animatable.View
+                                    key={item._id}
+                                    animation="fadeInRight"
+                                    duration={600}
+                                    delay={index * 100}
+                                    style={isDesktop ? { width: '32%' } : { width: '100%' }}
+                                >
+                                    <MenuItemCardAdmin
+                                        item={item}
+                                        onEdit={handleOpenModal}
+                                        onDelete={handleDeleteItem}
+                                        onToggleAvailability={handleToggleAvailability}
+                                    />
+                                </Animatable.View>
+                            ))}
+                        </View>
+                    </ScrollView>
                 )}
             </Animatable.View>
 
@@ -259,7 +279,15 @@ export default function CardapioGerenciar() {
 
             <Modal visible={modalVisible} animationType="fade" transparent onRequestClose={handleCloseModal}>
                 <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
-                    <Animatable.View animation="zoomIn" duration={500} style={tw`bg-white p-6 rounded-lg w-11/12 shadow-xl`}>
+                    <Animatable.View
+                        animation="zoomIn"
+                        duration={500}
+                        style={[
+                            tw`bg-white p-6 rounded-lg shadow-xl`,
+                            { width: isDesktop ? '50%' : '91%' }
+                        ]}
+                    >
+
                         <Text style={tw`text-xl font-bold mb-4 text-center text-[#005B7F]`}>
                             {isEditing ? 'Editar Item do Cardápio' : 'Adicionar Novo Item'}
                         </Text>
