@@ -1,50 +1,68 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# 📱 Chatbot Poliedro — Front-end
 
-## Get started
+Interface mobile e web de um sistema inteligente de pedidos para cantinas e lanchonetes escolares, com autenticação de usuários, interface administrativa e chatbot de atendimento. Desenvolvido com **React Native** e **Expo Router**, com responsividade total para web e mobile.
 
-1. Install dependencies
+🔗 Repositório do Back-end: [back](https://github.com/pcavalheiroo/back)
 
-   ```bash
-   npm install
-   ```
+## 📦 Tecnologias utilizadas
 
-2. Start the app
+- [React Native](https://reactnative.dev/)
+- [Expo Router](https://expo.github.io/router/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS via twrnc](https://github.com/jaredh159/tailwind-react-native-classnames)
+- [Animatable](https://github.com/oblador/react-native-animatable)
+- [Context API](https://reactjs.org/docs/context.html)
 
-   ```bash
-   npx expo start
-   ```
+## 🧱 Estrutura de Pastas
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+chatbot-poliedro/
+├── components/           # Componentes reutilizáveis (Header, Botões, Background)
+├── contexts/             # Contexto global do usuário
+├── assets/               # Imagens e logos
+├── app/                  # Páginas e rotas (Expo Router)
+│   ├── index.tsx         # Página inicial
+│   └── outras rotas/
+├── utils/                # Funções auxiliares (ex: formatação)
+├── types/                # Tipagens e interfaces
+├── package.json          # Dependências e scripts
+└── ...
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🚀 Funcionalidades
 
-## Learn more
+- Login/Logout de usuários
+- Chatbot para pedidos e dúvidas
+- Consulta e exibição de cardápio
+- Histórico de pedidos
+- Design responsivo adaptado para web e mobile
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🧪 Testes
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Atualmente, o projeto não possui testes automatizados. Testes manuais são feitos via interface mobile e web.
 
-## Join the community
+## 🛠️ Instalação e Execução
 
-Join our community of developers creating universal apps.
+```bash
+# Instalar dependências
+npm install
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Rodar localmente
+npx expo start
+```
+
+## 🌐 Deploy
+
+O projeto pode ser empacotado para:
+
+- Android/iOS via `eas build`
+- Web (PWA ou estático) via `expo export:web`
+
+---
+
+## 👨‍💻 Autor
+
+Pedro Cavalheiro  
+📧 pdrocavalheiro@gmail.com
+🔗 [github.com/pcavalheiroo](https://github.com/pcavalheiroo)
